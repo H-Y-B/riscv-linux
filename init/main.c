@@ -534,13 +534,13 @@ void __init __weak arch_call_rest_init(void)
 	rest_init();
 }
 
-asmlinkage __visible void __init start_kernel(void)
+asmlinkage __visible void __init start_kernel(void)//@riscv start kernel
 {
 	char *command_line;
 	char *after_dashes;
 
 	set_task_stack_end_magic(&init_task);
-	smp_setup_processor_id();
+	smp_setup_processor_id();                    //@in riscv/kernel/setup.c
 	debug_objects_early_init();
 
 	cgroup_init_early();
@@ -555,7 +555,7 @@ asmlinkage __visible void __init start_kernel(void)
 	boot_cpu_init();
 	page_address_init();
 	pr_notice("%s", linux_banner);
-	setup_arch(&command_line);
+	setup_arch(&command_line);                  //@in riscv/kernel/setup.c
 	/*
 	 * Set up the the initial canary and entropy after arch
 	 * and after adding latent and command line entropy.
@@ -573,7 +573,7 @@ asmlinkage __visible void __init start_kernel(void)
 	build_all_zonelists(NULL);
 	page_alloc_init();
 
-	pr_notice("Kernel command line: %s\n", boot_command_line);
+	pr_notice("Kernel command line: %s\n", boot_command_line);//@boot log ; get from chosen in dts
 	parse_early_param();
 	after_dashes = parse_args("Booting kernel",
 				  static_command_line, __start___param,
