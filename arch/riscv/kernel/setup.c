@@ -169,7 +169,7 @@ asmlinkage void __init setup_vm(void)
 #endif
 }
 
-void __init parse_dtb(unsigned int hartid, void *dtb) //@ device tree
+void __init parse_dtb(unsigned int hartid, void *dtb) //@call function : device tree
 {
 	early_init_dt_scan(__va(dtb));
 }

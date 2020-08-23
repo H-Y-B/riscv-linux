@@ -554,7 +554,7 @@ asmlinkage __visible void __init start_kernel(void)//@riscv start kernel
 	 */
 	boot_cpu_init();
 	page_address_init();
-	pr_notice("%s", linux_banner);
+	pr_notice("%s", linux_banner);              //@boot log: kernel version\computer user\compiler version\compile time
 	setup_arch(&command_line);                  //@in riscv/kernel/setup.c
 	/*
 	 * Set up the the initial canary and entropy after arch
@@ -1060,7 +1060,7 @@ static void mark_readonly(void)
 #else
 static inline void mark_readonly(void)
 {
-	pr_warn("This architecture does not have kernel memory protection.\n");
+	pr_warn("This architecture does not have kernel memory protection.\n"); //@ boot log
 }
 #endif
 

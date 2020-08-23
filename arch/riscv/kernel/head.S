@@ -42,8 +42,8 @@ ENTRY(_start)
 	la a3, hart_lottery
 	li a2, 1
 	amoadd.w a3, a2, (a3)
-	bnez a3, .Lsecondary_start
-
+	bnez a3, .Lsecondary_start //@ only a hart succeed to perform amoadd.w and continue;
+                               //@ other harts perform Lsecondary_start
 	/* Clear BSS for flat non-ELF images */
 	la a3, __bss_start
 	la a4, __bss_stop
@@ -76,8 +76,8 @@ clear_bss_done:
 	/* Start the kernel */
 	mv a0, s0
 	mv a1, s1
-	call parse_dtb
-	tail start_kernel
+	call parse_dtb          //@call function : device tree
+ 	tail start_kernel
 
 relocate:
 	/* Relocate return address */

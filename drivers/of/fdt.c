@@ -1210,7 +1210,7 @@ void __init early_init_dt_scan_nodes(void)
 	of_scan_flat_dt(early_init_dt_scan_memory, NULL);
 }
 
-bool __init early_init_dt_scan(void *params)
+bool __init early_init_dt_scan(void *params)  //@call function : parse_dtb->
 {
 	bool status;
 
