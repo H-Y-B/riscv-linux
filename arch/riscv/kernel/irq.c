@@ -32,17 +32,17 @@ int arch_show_interrupts(struct seq_file *p, int prec)
 	return 0;
 }
 
-asmlinkage void __irq_entry do_IRQ(struct pt_regs *regs)
+asmlinkage void __irq_entry do_IRQ(struct pt_regs *regs)  //@ interrupt
 {
 	struct pt_regs *old_regs = set_irq_regs(regs);
 
 	irq_enter();
 	switch (regs->scause & ~INTERRUPT_CAUSE_FLAG) {
-	case INTERRUPT_CAUSE_TIMER:
+	case INTERRUPT_CAUSE_TIMER:      //@ timer interrupt
 		riscv_timer_interrupt();
 		break;
 #ifdef CONFIG_SMP
-	case INTERRUPT_CAUSE_SOFTWARE:
+	case INTERRUPT_CAUSE_SOFTWARE:   //@ software interrupt
 		/*
 		 * We only use software interrupts to pass IPIs, so if a non-SMP
 		 * system gets one, then we don't know what to do.
@@ -50,7 +50,7 @@ asmlinkage void __irq_entry do_IRQ(struct pt_regs *regs)
 		riscv_software_interrupt();
 		break;
 #endif
-	case INTERRUPT_CAUSE_EXTERNAL:
+	case INTERRUPT_CAUSE_EXTERNAL:   //@ external interrupt
 		handle_arch_irq(regs);
 		break;
 	default:

@@ -147,24 +147,24 @@ static struct irq_domain *plic_irqdomain;
  * that source ID back to the same claim register.  This automatically enables
  * and disables the interrupt, so there's nothing else to do.
  */
-static void plic_handle_irq(struct pt_regs *regs)
+static void plic_handle_irq(struct pt_regs *regs)                //@ PLIC 
 {
 	struct plic_handler *handler = this_cpu_ptr(&plic_handlers);
 	void __iomem *claim = plic_hart_offset(handler->ctxid) + CONTEXT_CLAIM;
-	irq_hw_number_t hwirq;
+	irq_hw_number_t hwirq;             //@ type:unsigned long
 
 	WARN_ON_ONCE(!handler->present);
 
 	csr_clear(sie, SIE_SEIE);
-	while ((hwirq = readl(claim))) {
-		int irq = irq_find_mapping(plic_irqdomain, hwirq);
+	while ((hwirq = readl(claim))) {          //@ read claim 
+		int irq = irq_find_mapping(plic_irqdomain, hwirq);  //@ interrupt number
 
 		if (unlikely(irq <= 0))
 			pr_warn_ratelimited("can't find mapping for hwirq %lu\n",
 					hwirq);
 		else
 			generic_handle_irq(irq);
-		writel(hwirq, claim);
+		writel(hwirq, claim);                //@ write claim
 	}
 	csr_set(sie, SIE_SEIE);
 }
@@ -183,7 +183,7 @@ static int plic_find_hart_id(struct device_node *node)
 	return -1;
 }
 
-static int __init plic_init(struct device_node *node,
+static int __init plic_init(struct device_node *node,    //@ PLIC init
 		struct device_node *parent)
 {
 	int error = 0, nr_handlers, nr_mapped = 0, i;
@@ -248,7 +248,7 @@ static int __init plic_init(struct device_node *node,
 		nr_mapped++;
 	}
 
-	pr_info("mapped %d interrupts to %d (out of %d) handlers.\n",
+	pr_info("mapped %d interrupts to %d (out of %d) handlers.\n",    //@ boot log: in plic_init function
 		nr_irqs, nr_mapped, nr_handlers);
 	set_handle_irq(plic_handle_irq);
 	return 0;
@@ -260,3 +260,28 @@ out_iounmap:
 
 IRQCHIP_DECLARE(sifive_plic, "sifive,plic-1.0.0", plic_init);
 IRQCHIP_DECLARE(riscv_plic0, "riscv,plic0", plic_init); /* for legacy systems */
+/*
+#define IRQCHIP_DECLARE(name, compat, fn) OF_DECLARE_2(irqchip, name, compat, fn)
+                                |
+								v
+#define OF_DECLARE_2(table, name, compat, fn) \ 
+        _OF_DECLARE(table, name, compat, fn, of_init_fn_2)
+								|
+								v
+#define _OF_DECLARE(table, name, compat, fn, fn_type)     \ 
+static const struct of_device_id __of_table_##name        \ 
+        __used __section(__##table##_of_table)            \ 
+         = { .compatible = compat,                        \ 
+             .data = (fn == (fn_type)NULL) ? fn : fn  }
+
+static const struct of_device_id __of_table_##name        \ 
+        __used __section(__##table##_of_table)            \ 
+         = { .compatible = "riscv,plic0",                        \ 
+             .data =   plic_init    }
+struct of_device_id {
+	char	name[32];
+	char	type[32];
+	char	compatible[128];
+	const void *data;
+};
+*/
