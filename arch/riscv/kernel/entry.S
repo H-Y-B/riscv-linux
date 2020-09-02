@@ -159,7 +159,7 @@ ENTRY(handle_exception)
 	la gp, __global_pointer$
 .option pop
 
-	la ra, ret_from_exception
+	la ra, ret_from_exception 
 	/*
 	 * MSB of cause differentiates between
 	 * interrupts and exceptions
@@ -168,7 +168,7 @@ ENTRY(handle_exception)
 
 	/* Handle interrupts */
 	move a0, sp /* pt_regs */
-	tail do_IRQ
+	tail do_IRQ                           //@ interrupt handle in riscv/kernel/irq.c
 1:
 	/* Exceptions run with interrupts enabled */
 	csrs sstatus, SR_SIE

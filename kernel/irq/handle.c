@@ -211,7 +211,7 @@ irqreturn_t handle_irq_event(struct irq_desc *desc)
 }
 
 #ifdef CONFIG_GENERIC_IRQ_MULTI_HANDLER
-int __init set_handle_irq(void (*handle_irq)(struct pt_regs *))
+int __init set_handle_irq(void (*handle_irq)(struct pt_regs *))//@ set external interrupt haldler
 {
 	if (handle_arch_irq)
 		return -EBUSY;

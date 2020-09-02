@@ -592,7 +592,7 @@ asmlinkage __visible void __init start_kernel(void)//@riscv start kernel
 	setup_log_buf(0);
 	vfs_caches_init_early();
 	sort_main_extable();
-	trap_init();
+	trap_init();                           //@in riscv/kernel/traps.c
 	mm_init();
 
 	ftrace_init();
@@ -639,8 +639,8 @@ asmlinkage __visible void __init start_kernel(void)//@riscv start kernel
 
 	context_tracking_init();
 	/* init some links before init_ISA_irqs() */
-	early_irq_init();
-	init_IRQ();
+	early_irq_init();    //@ call function in kernel/irq/irqdesc.c
+	init_IRQ();          //@ call function in riscv/kernel/irq.c
 	tick_init();
 	rcu_init_nohz();
 	init_timers();

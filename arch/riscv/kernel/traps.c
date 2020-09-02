@@ -161,7 +161,7 @@ void __init trap_init(void)
 	 */
 	csr_write(sscratch, 0);
 	/* Set the exception vector address */
-	csr_write(stvec, &handle_exception);
+	csr_write(stvec, &handle_exception); //@ in riscv/kernel/entry.S
 	/* Enable all interrupts */
 	csr_write(sie, -1);
 }

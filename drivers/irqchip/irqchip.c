@@ -24,7 +24,7 @@ irqchip_of_match_end __used __section(__irqchip_of_table_end);
 
 extern struct of_device_id __irqchip_of_table[];
 
-void __init irqchip_init(void)
+void __init irqchip_init(void)                  //@ call function from init_IRQ in riscv/kernel/irq.c
 {
 	of_irq_init(__irqchip_of_table);
 	acpi_probe_device_table(irqchip);
