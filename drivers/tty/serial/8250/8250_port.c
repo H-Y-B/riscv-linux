@@ -457,7 +457,7 @@ static void io_serial_out(struct uart_port *p, int offset, int value)
 
 static int serial8250_default_handle_irq(struct uart_port *port);
 
-static void set_io_from_upio(struct uart_port *p)
+static void set_io_from_upio(struct uart_port *p) //@ set serial_in and serial_out functions
 {
 	struct uart_8250_port *up = up_to_u8250p(p);
 
