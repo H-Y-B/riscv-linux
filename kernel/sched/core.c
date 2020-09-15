@@ -3315,7 +3315,7 @@ pick_next_task(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)
 		    prev->sched_class == &fair_sched_class) &&
 		   rq->nr_running == rq->cfs.h_nr_running)) {
 
-		p = fair_sched_class.pick_next_task(rq, prev, rf);
+		p = fair_sched_class.pick_next_task(rq, prev, rf);//从 公平调度策略 中拿方法 执行
 		if (unlikely(p == RETRY_TASK))
 			goto again;
 
@@ -3328,7 +3328,7 @@ pick_next_task(struct rq *rq, struct task_struct *prev, struct rq_flags *rf)
 
 again:
 	for_each_class(class) {
-		p = class->pick_next_task(rq, prev, rf);
+		p = class->pick_next_task(rq, prev, rf);//从 某一个 具体调度策略 中拿方法  执行
 		if (p) {
 			if (unlikely(p == RETRY_TASK))
 				goto again;

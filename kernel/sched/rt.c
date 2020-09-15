@@ -927,7 +927,7 @@ static int sched_rt_runtime_exceeded(struct rt_rq *rt_rq)
 		 * but accrue some time due to boosting.
 		 */
 		if (likely(rt_b->rt_runtime)) {
-			rt_rq->rt_throttled = 1;
+			rt_rq->rt_throttled = 1;//设置为1，则实时队列被限制
 			printk_deferred_once("sched: RT throttling activated\n");
 		} else {
 			/*
@@ -1506,11 +1506,11 @@ static struct sched_rt_entity *pick_next_rt_entity(struct rq *rq,
 	struct list_head *queue;
 	int idx;
 
-	idx = sched_find_first_bit(array->bitmap);
+	idx = sched_find_first_bit(array->bitmap);//找到优先级最高的位
 	BUG_ON(idx >= MAX_RT_PRIO);
 
-	queue = array->queue + idx;
-	next = list_entry(queue->next, struct sched_rt_entity, run_list);
+	queue = array->queue + idx; //然后找到对应的queue的起始地址
+	next = list_entry(queue->next, struct sched_rt_entity, run_list);//按先进先出拿 entity
 
 	return next;
 }
@@ -2373,7 +2373,7 @@ static unsigned int get_rr_interval_rt(struct rq *rq, struct task_struct *task)
 	else
 		return 0;
 }
-
+//具体调度策略 之 实时调度策略
 const struct sched_class rt_sched_class = {
 	.next			= &fair_sched_class,
 	.enqueue_task		= enqueue_task_rt,

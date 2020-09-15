@@ -478,6 +478,8 @@ struct cfs_bandwidth { };
 
 #endif	/* CONFIG_CGROUP_SCHED */
 
+
+//CFS  完全调度算法
 /* CFS-related fields in a runqueue */
 struct cfs_rq {
 	struct load_weight	load;
@@ -580,6 +582,8 @@ static inline int rt_bandwidth_enabled(void)
 # define HAVE_RT_PUSH_IPI
 #endif
 
+
+//实时运行队列
 /* Real-Time classes' related field in a runqueue: */
 struct rt_rq {
 	struct rt_prio_array	active;
@@ -602,9 +606,9 @@ struct rt_rq {
 #endif /* CONFIG_SMP */
 	int			rt_queued;
 
-	int			rt_throttled;
-	u64			rt_time;
-	u64			rt_runtime;
+	int			rt_throttled;//当累计运行时间超过 最大运行时间，设置为1
+	u64			rt_time;     //当前队列的累计运行时间
+	u64			rt_runtime;  //当前队列的最大运行时间
 	/* Nests inside the rq lock: */
 	raw_spinlock_t		rt_runtime_lock;
 
@@ -1601,11 +1605,13 @@ extern const u32		sched_prio_to_wmult[40];
 
 #define RETRY_TASK		((void *)-1UL)
 
+
+//调度类，内核中每种调度策略都有该调度类的一个实例
 struct sched_class {
 	const struct sched_class *next;
 
-	void (*enqueue_task) (struct rq *rq, struct task_struct *p, int flags);
-	void (*dequeue_task) (struct rq *rq, struct task_struct *p, int flags);
+	void (*enqueue_task) (struct rq *rq, struct task_struct *p, int flags);//将一个task插入相应的 runqueue（rq）中
+	void (*dequeue_task) (struct rq *rq, struct task_struct *p, int flags);//将一个task从rq中删除
 	void (*yield_task)   (struct rq *rq);
 	bool (*yield_to_task)(struct rq *rq, struct task_struct *p, bool preempt);
 
@@ -1619,10 +1625,10 @@ struct sched_class {
 	 * May return RETRY_TASK when it finds a higher prio class has runnable
 	 * tasks.
 	 */
-	struct task_struct * (*pick_next_task)(struct rq *rq,
+	struct task_struct * (*pick_next_task)(struct rq *rq,   //从rq中选择下一个运行的task
 					       struct task_struct *prev,
 					       struct rq_flags *rf);
-	void (*put_prev_task)(struct rq *rq, struct task_struct *p);
+	void (*put_prev_task)(struct rq *rq, struct task_struct *p); //将task 重新放回rq中
 
 #ifdef CONFIG_SMP
 	int  (*select_task_rq)(struct task_struct *p, int task_cpu, int sd_flag, int flags);
@@ -1683,11 +1689,13 @@ static inline void set_curr_task(struct rq *rq, struct task_struct *curr)
 #define for_each_class(class) \
    for (class = sched_class_highest; class; class = class->next)
 
+//具体的调度策略
 extern const struct sched_class stop_sched_class;
 extern const struct sched_class dl_sched_class;
-extern const struct sched_class rt_sched_class;
-extern const struct sched_class fair_sched_class;
+extern const struct sched_class rt_sched_class;  //基于实时进程的调度类实例
+extern const struct sched_class fair_sched_class;//基于公平的调度类实例
 extern const struct sched_class idle_sched_class;
+// 调度器核心函数schedule（） 只需要调用这些实例中的接口函数，完成进程调度，完全不需要考虑调度策略的具体实现方式
 
 
 #ifdef CONFIG_SMP
