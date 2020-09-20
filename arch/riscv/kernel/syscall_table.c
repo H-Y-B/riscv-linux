@@ -21,6 +21,6 @@
 #define __SYSCALL(nr, call)	[nr] = (call),
 
 void *sys_call_table[__NR_syscalls] = {
-	[0 ... __NR_syscalls - 1] = sys_ni_syscall,
+	[0 ... __NR_syscalls - 1] = sys_ni_syscall, //新加了一个系统调用
 #include <asm/unistd.h>
 };

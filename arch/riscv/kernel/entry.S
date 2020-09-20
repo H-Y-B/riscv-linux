@@ -38,15 +38,17 @@
 	 * will contain 0, and we should continue on the current TP.
 	 */
 	csrrw tp, sscratch, tp
-	bnez tp, _save_context
+	bnez tp, _save_context  //@ tp=0 from kernel;  tp!=0 fome userspace
 
-_restore_kernel_tpsp:
+_restore_kernel_tpsp://@ if form userspace
 	csrr tp, sscratch
 	REG_S sp, TASK_TI_KERNEL_SP(tp)
+
 _save_context:
-	REG_S sp, TASK_TI_USER_SP(tp)
-	REG_L sp, TASK_TI_KERNEL_SP(tp)
-	addi sp, sp, -(PT_SIZE_ON_STACK)
+	REG_S sp, TASK_TI_USER_SP(tp)    //@用户栈指针
+	REG_L sp, TASK_TI_KERNEL_SP(tp)  //@内核栈指针
+	addi sp, sp, -(PT_SIZE_ON_STACK) //@在内核栈上申请空间
+	//@开始往内核栈上存数据
 	REG_S x1,  PT_RA(sp)
 	REG_S x3,  PT_GP(sp)
 	REG_S x5,  PT_T0(sp)
@@ -90,7 +92,7 @@ _save_context:
 	csrrc s1, sstatus, t0
 	csrr s2, sepc
 	csrr s3, sbadaddr
-	csrr s4, scause
+	csrr s4, scause  //s4-reg存着cause
 	csrr s5, sscratch
 	REG_S s0, PT_SP(sp)
 	REG_S s1, PT_SSTATUS(sp)
@@ -144,8 +146,16 @@ _save_context:
 	REG_L x2,  PT_SP(sp)
 	.endm
 
+
+
+
+
+
+
+
+//stvec 
 ENTRY(handle_exception)
-	SAVE_ALL
+	SAVE_ALL  //保存信息
 
 	/*
 	 * Set sscratch register to 0, so that if a recursive exception
@@ -164,31 +174,31 @@ ENTRY(handle_exception)
 	 * MSB of cause differentiates between
 	 * interrupts and exceptions
 	 */
-	bge s4, zero, 1f
+	bge s4, zero, 1f  //s4-reg里面存着cause
 
 	/* Handle interrupts */
 	move a0, sp /* pt_regs */
-	tail do_IRQ                           //@ interrupt handle in riscv/kernel/irq.c
+	tail do_IRQ                           //@处理中断 interrupt handle in riscv/kernel/irq.c
 1:
 	/* Exceptions run with interrupts enabled */
 	csrs sstatus, SR_SIE
 
 	/* Handle syscalls */
-	li t0, EXC_SYSCALL
-	beq s4, t0, handle_syscall
+	li t0, EXC_SYSCALL          //8: environment call from U-mode
+	beq s4, t0, handle_syscall 
 
 	/* Handle other exceptions */
 	slli t0, s4, RISCV_LGPTR
-	la t1, excp_vect_table
-	la t2, excp_vect_table_end
+	la t1, excp_vect_table      //@异常向量表 起始地址
+	la t2, excp_vect_table_end  //@异常向量表 结束地址
 	move a0, sp /* pt_regs */
 	add t0, t1, t0
 	/* Check if exception code lies within bounds */
 	bgeu t0, t2, 1f
-	REG_L t0, 0(t0)
+	REG_L t0, 0(t0)     //@异常向量表项的跳转地址
 	jr t0
 1:
-	tail do_trap_unknown
+	tail do_trap_unknown //@未知的异常
 
 handle_syscall:
 	 /* save the initial A0 value (needed in signal handlers) */
@@ -203,18 +213,23 @@ handle_syscall:
 	REG_L t0, TASK_TI_FLAGS(tp)
 	andi t0, t0, _TIF_SYSCALL_TRACE
 	bnez t0, handle_syscall_trace_enter
+
+//@ 检查系统调用编号
 check_syscall_nr:
 	/* Check to make sure we don't jump to a bogus syscall number. */
-	li t0, __NR_syscalls
-	la s0, sys_ni_syscall
+	li t0, __NR_syscalls   //@ 规定的系统调用个数
+	la s0, sys_ni_syscall  //@ 未实现的系统调用 ni-no implement
 	/* Syscall number held in a7 */
 	bgeu a7, t0, 1f
-	la s0, sys_call_table
+	la s0, sys_call_table  //@ 系统调用表起始地址
 	slli t0, a7, RISCV_LGPTR
 	add s0, s0, t0
-	REG_L s0, 0(s0)
+	REG_L s0, 0(s0)        //@ 拿到系统调用跳转地址
 1:
 	jalr s0
+
+
+
 
 ret_from_syscall:
 	/* Set user a0 to kernel a0 */
@@ -247,8 +262,15 @@ resume_userspace:
 	csrw sscratch, tp
 
 restore_all:
-	RESTORE_ALL
+	RESTORE_ALL //@提取保存信息
 	sret
+
+
+
+
+
+
+
 
 work_pending:
 	/* Enter slow path for supplementary processing */
@@ -283,6 +305,14 @@ handle_syscall_trace_exit:
 	j ret_from_exception
 
 END(handle_exception)
+
+
+
+
+
+
+
+
 
 ENTRY(ret_from_fork)
 	la ra, ret_from_exception
@@ -355,6 +385,10 @@ ENTRY(__switch_to)
 #endif
 	ret
 ENDPROC(__switch_to)
+
+
+
+
 
 	.section ".rodata"
 	/* Exception vector table */
