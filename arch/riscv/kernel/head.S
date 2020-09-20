@@ -44,21 +44,29 @@ ENTRY(_start)
 	amoadd.w a3, a2, (a3)
 	bnez a3, .Lsecondary_start //@ only a hart succeed to perform amoadd.w and continue;
                                //@ other harts perform Lsecondary_start
+	
+
+
+
 	/* Clear BSS for flat non-ELF images */
 	la a3, __bss_start
 	la a4, __bss_stop
 	ble a4, a3, clear_bss_done
 clear_bss:
-	REG_S zero, (a3)
+	REG_S zero, (a3)  //store 0 ->(a3)
 	add a3, a3, RISCV_SZPTR
 	blt a3, a4, clear_bss
 clear_bss_done:
+
+
+
+
 
 	/* Save hart ID and DTB physical address */
 	mv s0, a0
 	mv s1, a1
 	la a2, boot_cpu_hartid
-	REG_S a0, (a2)
+	REG_S a0, (a2)       a0(hart id) -> (a2)(boot_cpu_hartid)
 
 	/* Initialize page tables and relocate to virtual addresses */
 	la sp, init_thread_union + THREAD_SIZE
@@ -78,6 +86,9 @@ clear_bss_done:
 	mv a1, s1
 	call parse_dtb          //@call function : device tree
  	tail start_kernel
+
+
+
 
 relocate:
 	/* Relocate return address */
@@ -105,7 +116,7 @@ relocate:
 	srl a0, a0, PAGE_SHIFT
 	or a0, a0, a1
 	sfence.vma
-	csrw sptbr, a0
+	csrw sptbr, a0 //根页表 地址
 .align 2
 1:
 	/* Set trap vector to spin forever to help debug */
@@ -119,22 +130,22 @@ relocate:
 .option pop
 
 	/* Switch to kernel page tables */
-	csrw sptbr, a2
+	csrw sptbr, a2 //根页表 地址
 
 	ret
 
 .Lsecondary_start:
 #ifdef CONFIG_SMP
-	li a1, CONFIG_NR_CPUS
-	bgeu a0, a1, .Lsecondary_park
+	li a1, CONFIG_NR_CPUS           //配置的处理器核心数
+	bgeu a0, a1, .Lsecondary_park   //多余的处理器核 去 死循环
 
 	/* Set trap vector to spin forever to help debug */
 	la a3, .Lsecondary_park
-	csrw stvec, a3
+	csrw stvec, a3    //把死循环 作为 异常向量入口
 
-	slli a3, a0, LGREG
-	la a1, __cpu_up_stack_pointer
-	la a2, __cpu_up_task_pointer
+	slli a3, a0, LGREG  //a3= hartid << 3
+	la a1, __cpu_up_stack_pointer //void 数组[NR_CPUS]  这里的void和左移3（64位cpu）对应
+	la a2, __cpu_up_task_pointer  //void 数组[NR_CPUS]
 	add a1, a3, a1
 	add a2, a3, a2
 
@@ -157,7 +168,7 @@ relocate:
 #endif
 
 .align 2
-.Lsecondary_park:
+.Lsecondary_park: //让其他核在这里死循环
 	/* We lack SMP support or have too many harts, so park this hart */
 	wfi
 	j .Lsecondary_park
