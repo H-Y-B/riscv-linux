@@ -26,10 +26,10 @@ ENTRY(_start)
 	csrw sie, zero
 
 	/* Load the global pointer */
-.option push
-.option norelax
+.option push                      //入栈；  入栈什么？之前option的设置  为什么要入栈？将之前的设置存起来，设置新的option，即下面的norelax
+.option norelax                   //不允许链接器松弛 ； “松弛”？
 	la gp, __global_pointer$
-.option pop
+.option pop                       //出栈
 
 	/*
 	 * Disable FPU to detect illegal usage of
