@@ -18,7 +18,7 @@
 
 unsigned long riscv_timebase;
 
-void __init time_init(void)
+void __init time_init(void)//读取dts中的 “time-freqency”属性
 {
 	struct device_node *cpu;
 	u32 prop;

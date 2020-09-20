@@ -647,7 +647,7 @@ asmlinkage __visible void __init start_kernel(void)//@riscv start kernel
 	hrtimers_init();
 	softirq_init();
 	timekeeping_init();
-	time_init();
+	time_init();        //@ call function in riscv/kernel/time.c   读取设备树中的“timebase-frequency”属性
 	printk_safe_init();
 	perf_event_init();
 	profile_init();
