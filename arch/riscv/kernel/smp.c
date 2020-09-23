@@ -115,7 +115,7 @@ send_ipi_message(const struct cpumask *to_whom, enum ipi_message_type operation)
 		cpumask_set_cpu(hartid, &hartid_mask);
 	}
 	mb();
-	sbi_send_ipi(cpumask_bits(&hartid_mask));
+	sbi_send_ipi(cpumask_bits(&hartid_mask));// 最终还是通过 sbi 来实现 ipi
 }
 
 static const char * const ipi_names[] = {

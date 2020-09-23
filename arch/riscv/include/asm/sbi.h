@@ -16,6 +16,8 @@
 
 #include <linux/types.h>
 
+//Supervisor Binary Interface
+
 #define SBI_SET_TIMER 0
 #define SBI_CONSOLE_PUTCHAR 1
 #define SBI_CONSOLE_GETCHAR 2
@@ -67,6 +69,9 @@ static inline void sbi_shutdown(void)
 	SBI_CALL_0(SBI_SHUTDOWN);
 }
 
+
+
+
 static inline void sbi_clear_ipi(void)
 {
 	SBI_CALL_0(SBI_CLEAR_IPI);
@@ -76,6 +81,9 @@ static inline void sbi_send_ipi(const unsigned long *hart_mask)
 {
 	SBI_CALL_1(SBI_SEND_IPI, hart_mask);
 }
+
+
+
 
 static inline void sbi_remote_fence_i(const unsigned long *hart_mask)
 {
