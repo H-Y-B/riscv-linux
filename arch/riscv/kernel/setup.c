@@ -128,6 +128,13 @@ pgd_t trampoline_pg_dir[PTRS_PER_PGD] __initdata __aligned(PAGE_SIZE);
 pmd_t swapper_pmd[PTRS_PER_PMD*((-PAGE_OFFSET)/PGDIR_SIZE)] __page_aligned_bss;
 pmd_t trampoline_pmd[PTRS_PER_PGD] __initdata __aligned(PAGE_SIZE);
 #endif
+/* 四级分页机制
+ * 页全局目录（Page Global Directory）
+ * 页上级目录（Page Upper Directory）
+ * 页中间目录（Page Middle Directory） PMD
+ * 页表（Page Table）
+ */
+
 
 asmlinkage void __init setup_vm(void)
 {

@@ -66,7 +66,7 @@ clear_bss_done:
 	mv s0, a0
 	mv s1, a1
 	la a2, boot_cpu_hartid
-	REG_S a0, (a2)       a0(hart id) -> (a2)(boot_cpu_hartid)
+	REG_S a0, (a2)       //a0(hart id) -> (a2)(boot_cpu_hartid)
 
 	/* Initialize page tables and relocate to virtual addresses */
 	la sp, init_thread_union + THREAD_SIZE
@@ -104,19 +104,25 @@ relocate:
 
 	/* Compute satp for kernel page tables, but don't load it yet */
 	la a2, swapper_pg_dir
-	srl a2, a2, PAGE_SHIFT
-	li a1, SATP_MODE
-	or a2, a2, a1
+	srl a2, a2, PAGE_SHIFT //右移12位 
+	li a1, SATP_MODE       //地址转换模式   32位-Sv32   其他-Sv39  
+	or a2, a2, a1          //MODE-ASID-PPN
 
 	/*
 	 * Load trampoline page directory, which will cause us to trap to
 	 * stvec if VA != PA, or simply fall through if VA == PA
 	 */
 	la a0, trampoline_pg_dir
-	srl a0, a0, PAGE_SHIFT
-	or a0, a0, a1
+	srl a0, a0, PAGE_SHIFT  //右移12位 
+	or a0, a0, a1           //MODE-ASID-PPN
 	sfence.vma
 	csrw sptbr, a0 //根页表 地址
+
+   /*
+	*这里 构建 了两个 根页表地址 from swapper_pg_dir and trampoline_pg_dir
+	*这两个的区别是什么？
+	*/
+
 .align 2
 1:
 	/* Set trap vector to spin forever to help debug */
@@ -130,7 +136,7 @@ relocate:
 .option pop
 
 	/* Switch to kernel page tables */
-	csrw sptbr, a2 //根页表 地址
+	csrw sptbr, a2 //根页表 地址;  从这里开始 进入虚拟地址
 
 	ret
 
