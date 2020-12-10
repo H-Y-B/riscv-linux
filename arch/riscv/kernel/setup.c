@@ -89,7 +89,7 @@ unsigned long __cpuid_to_hartid_map[NR_CPUS] = {
 
 void __init smp_setup_processor_id(void)
 {
-	cpuid_to_hartid_map(0) = boot_cpu_hartid;
+	cpuid_to_hartid_map(0) = boot_cpu_hartid;  //@将 cpu id 0  与 boot_cpu_hartid 绑定
 }
 
 #ifdef CONFIG_BLK_DEV_INITRD
@@ -239,7 +239,7 @@ void __init setup_arch(char **cmdline_p)
 	init_mm.start_code = (unsigned long) _stext;
 	init_mm.end_code   = (unsigned long) _etext;
 	init_mm.end_data   = (unsigned long) _edata;
-	init_mm.brk        = (unsigned long) _end;
+	init_mm.brk        = (unsigned long) _end;   //初始化 堆的起始地址
 
 	setup_bootmem();
 	paging_init();

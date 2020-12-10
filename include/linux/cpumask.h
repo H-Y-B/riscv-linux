@@ -86,10 +86,19 @@ extern unsigned int nr_cpu_ids;
  *    only one CPU.
  */
 
-extern struct cpumask __cpu_possible_mask;
-extern struct cpumask __cpu_online_mask;
-extern struct cpumask __cpu_present_mask;
-extern struct cpumask __cpu_active_mask;
+/*
+cpu_possible_bits,表示实际在运行时处理器的CPU个数是多少？
+cpu_online_bits, 用以表示系统真正在工作的处理器个数/状态。当内核管理处理器时主要是通过这个来进行的，
+cpu_present_bits:用以表示系统中present的处理器数量，不一定所有都是Online的，
+                 在支持处理器热插拔的系统中，possible与present的关系为“cpu_possible_map = cpu_present_map + additional_cpus” ,
+				 present处理器是指系统固有的处理器个数不是外部插入的。
+cpu_active_bits, 表示目前处于可工作状态的处理器个数。
+*/
+
+extern struct cpumask __cpu_possible_mask;  //@系统内可以setup的CPU位图
+extern struct cpumask __cpu_online_mask;    //@系统内已经setup的CPU中，正在使用的CPU位图
+extern struct cpumask __cpu_present_mask;   //@系统内已经setup的CPU位图
+extern struct cpumask __cpu_active_mask;    //@系统内处于可工作状态CPU位图，处于联机状态且可以迁移的CPU位图
 #define cpu_possible_mask ((const struct cpumask *)&__cpu_possible_mask)
 #define cpu_online_mask   ((const struct cpumask *)&__cpu_online_mask)
 #define cpu_present_mask  ((const struct cpumask *)&__cpu_present_mask)
