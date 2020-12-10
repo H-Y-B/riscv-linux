@@ -291,7 +291,7 @@ void calibrate_delay(void)
 	} else if ((!printed) && lpj_fine) {
 		lpj = lpj_fine;
 		pr_info("Calibrating delay loop (skipped), "
-			"value calculated using timer frequency.. ");
+			"value calculated using timer frequency.. ");  //@boot log 
 	} else if ((lpj = calibrate_delay_is_known())) {
 		;
 	} else if ((lpj = calibrate_delay_direct()) != 0) {
@@ -305,7 +305,7 @@ void calibrate_delay(void)
 	}
 	per_cpu(cpu_loops_per_jiffy, this_cpu) = lpj;
 	if (!printed)
-		pr_cont("%lu.%02lu BogoMIPS (lpj=%lu)\n",
+		pr_cont("%lu.%02lu BogoMIPS (lpj=%lu)\n",          //@boot log 
 			lpj/(500000/HZ),
 			(lpj/(5000/HZ)) % 100, lpj);
 

@@ -18,7 +18,7 @@
 
 unsigned long riscv_timebase;
 
-void __init time_init(void)//读取dts中的 “time-freqency”属性
+void __init time_init(void)//读取dts中的 “timebase-frequency”属性
 {
 	struct device_node *cpu;
 	u32 prop;
@@ -28,6 +28,6 @@ void __init time_init(void)//读取dts中的 “time-freqency”属性
 		panic(KERN_WARNING "RISC-V system with no 'timebase-frequency' in DTS\n");
 	riscv_timebase = prop;
 
-	lpj_fine = riscv_timebase / HZ;
-	timer_probe();
+	lpj_fine = riscv_timebase / HZ;  //@[time] timebase-frequency/100
+	timer_probe();  //@[time] in drivers/clocksource/timer-probe.c
 }
