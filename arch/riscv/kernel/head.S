@@ -65,6 +65,8 @@ clear_bss_done:
 	/* Save hart ID and DTB physical address */
 	mv s0, a0
 	mv s1, a1
+
+	//将hart id赋值给boot_cpu_hartid变量 ，（该变量定义在arch/riscv/kernel/setup.c中）
 	la a2, boot_cpu_hartid
 	REG_S a0, (a2)       //a0(hart id) -> (a2)(boot_cpu_hartid)
 

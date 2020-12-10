@@ -548,7 +548,7 @@ asmlinkage __visible void __init start_kernel(void)//@riscv start kernel
 
 	cgroup_init_early();
 
-	local_irq_disable();
+	local_irq_disable();                         //@ 关闭所有中断响应  arch/riscv/include/asm/irqflags.h
 	early_boot_irqs_disabled = true;
 
 	/*
@@ -658,7 +658,7 @@ asmlinkage __visible void __init start_kernel(void)//@riscv start kernel
 	WARN(!irqs_disabled(), "Interrupts were enabled early\n");
 
 	early_boot_irqs_disabled = false;
-	local_irq_enable();
+	local_irq_enable();          //@ 开启所有中断响应  arch/riscv/include/asm/irqflags.h
 
 	kmem_cache_init_late();
 

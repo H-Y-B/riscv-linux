@@ -19,7 +19,7 @@
 #include <asm/thread_info.h>
 
 OUTPUT_ARCH(riscv)
-ENTRY(_start)
+ENTRY(_start)       //vmlinux的程序入口地址
 
 jiffies = jiffies_64;
 
