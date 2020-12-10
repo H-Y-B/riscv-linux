@@ -22,7 +22,7 @@
 /*
  * Mapping between linux logical cpu index and hartid.
  */
-extern unsigned long __cpuid_to_hartid_map[NR_CPUS];
+extern unsigned long __cpuid_to_hartid_map[NR_CPUS];     //@ __cpuid_to_hartid_map[cpu id]  =  hart id 
 #define cpuid_to_hartid_map(cpu)    __cpuid_to_hartid_map[cpu]
 
 struct seq_file;

@@ -541,6 +541,9 @@ asmlinkage __visible void __init start_kernel(void)//@riscv start kernel
 
 	set_task_stack_end_magic(&init_task);
 	smp_setup_processor_id();                    //@in riscv/kernel/setup.c
+												 //@将 cpu id 0  与 boot_cpu_hartid 绑定
+
+
 	debug_objects_early_init();
 
 	cgroup_init_early();
@@ -567,7 +570,7 @@ asmlinkage __visible void __init start_kernel(void)//@riscv start kernel
 	setup_command_line(command_line);
 	setup_nr_cpu_ids();
 	setup_per_cpu_areas();
-	smp_prepare_boot_cpu();	/* arch-specific boot-cpu hooks */
+	smp_prepare_boot_cpu();	/* arch-specific boot-cpu hooks *///@[SMP] arch/riscv/kernel/smpboot.c
 	boot_cpu_hotplug_init();
 
 	build_all_zonelists(NULL);
@@ -1134,7 +1137,7 @@ static noinline void __init kernel_init_freeable(void)
 
 	cad_pid = task_pid(current);
 
-	smp_prepare_cpus(setup_max_cpus);
+	smp_prepare_cpus(setup_max_cpus);//@[SMP] in arch/riscv/kernel/smpboot.c
 
 	workqueue_init();
 
@@ -1143,7 +1146,7 @@ static noinline void __init kernel_init_freeable(void)
 	do_pre_smp_initcalls();
 	lockup_detector_init();
 
-	smp_init();
+	smp_init();//@[SMP] in kernel/smp.c
 	sched_init_smp();
 
 	page_alloc_init_late();

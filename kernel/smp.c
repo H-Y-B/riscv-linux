@@ -560,18 +560,18 @@ void __init setup_nr_cpu_ids(void)
 }
 
 /* Called by boot processor to activate the rest. */
-void __init smp_init(void)
+void __init smp_init(void)//@[SMP]
 {
 	int num_nodes, num_cpus;
 	unsigned int cpu;
 
-	idle_threads_init();
+	idle_threads_init();//@为每个非boot cpu都各fork一个idle task，将获得的task_struct记录到per_cpu变量idle_threads中
 	cpuhp_threads_init();
 
-	pr_info("Bringing up secondary CPUs ...\n");
+	pr_info("Bringing up secondary CPUs ...\n");//@boot log
 
 	/* FIXME: This should be done in userspace --RR */
-	for_each_present_cpu(cpu) {
+	for_each_present_cpu(cpu) {//@遍历cpu，如果cpu没有online（cpu_online_mask），那么调用cpu_on(cpu)
 		if (num_online_cpus() >= setup_max_cpus)
 			break;
 		if (!cpu_online(cpu))
@@ -580,7 +580,7 @@ void __init smp_init(void)
 
 	num_nodes = num_online_nodes();
 	num_cpus  = num_online_cpus();
-	pr_info("Brought up %d node%s, %d CPU%s\n",
+	pr_info("Brought up %d node%s, %d CPU%s\n",  //@boot log
 		num_nodes, (num_nodes > 1 ? "s" : ""),
 		num_cpus,  (num_cpus  > 1 ? "s" : ""));
 
