@@ -528,6 +528,8 @@ int __init early_irq_init(void)
 
 #else /* !CONFIG_SPARSE_IRQ */
 
+
+//@中断描述符表
 struct irq_desc irq_desc[NR_IRQS] __cacheline_aligned_in_smp = {
 	[0 ... NR_IRQS-1] = {
 		.handle_irq	= handle_bad_irq,
@@ -536,7 +538,7 @@ struct irq_desc irq_desc[NR_IRQS] __cacheline_aligned_in_smp = {
 	}
 };
 
-int __init early_irq_init(void)
+int __init early_irq_init(void)  //@初始化中断描述符表
 {
 	int count, i, node = first_online_node;
 	struct irq_desc *desc;
@@ -555,7 +557,7 @@ int __init early_irq_init(void)
 		lockdep_set_class(&desc[i].lock, &irq_desc_lock_class);
 		desc_set_defaults(i, &desc[i], node, NULL, NULL);
 	}
-	return arch_early_irq_init();
+	return arch_early_irq_init();//@ riscv没有定义这个函数
 }
 
 struct irq_desc *irq_to_desc(unsigned int irq)
