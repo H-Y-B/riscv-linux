@@ -66,8 +66,9 @@ int setup_profiling_timer(unsigned int multiplier)
 	return -EINVAL;
 }
 
-void riscv_software_interrupt(void)
-{
+void riscv_software_interrupt(void)//@only use software interrupts to pass IPIs,
+{                                  //@其他核 将 本核CLINT中对应的IPI置1，就会触发本核的软件中断
+
 	unsigned long *pending_ipis = &ipi_data[smp_processor_id()].bits;
 	unsigned long *stats = ipi_data[smp_processor_id()].stats;
 
@@ -80,7 +81,7 @@ void riscv_software_interrupt(void)
 		/* Order bit clearing and data access. */
 		mb();
 
-		ops = xchg(pending_ipis, 0);
+		ops = xchg(pending_ipis, 0);//@读取  其他核发送来的  具体IPI类型
 		if (ops == 0)
 			return;
 
@@ -110,7 +111,7 @@ send_ipi_message(const struct cpumask *to_whom, enum ipi_message_type operation)
 	cpumask_clear(&hartid_mask);
 	mb();
 	for_each_cpu(cpuid, to_whom) {
-		set_bit(operation, &ipi_data[cpuid].bits);
+		set_bit(operation, &ipi_data[cpuid].bits);//@向其他核 发送的 具体IPI类型
 		hartid = cpuid_to_hartid_map(cpuid);
 		cpumask_set_cpu(hartid, &hartid_mask);
 	}
@@ -136,14 +137,14 @@ void show_ipi_stats(struct seq_file *p, int prec)
 	}
 }
 
-void arch_send_call_function_ipi_mask(struct cpumask *mask)
+void arch_send_call_function_ipi_mask(struct cpumask *mask)//@群法，mask表示群发的成员（CPU）
 {
 	send_ipi_message(mask, IPI_CALL_FUNC);
 }
 
 void arch_send_call_function_single_ipi(int cpu)
 {
-	send_ipi_message(cpumask_of(cpu), IPI_CALL_FUNC);
+	send_ipi_message(cpumask_of(cpu), IPI_CALL_FUNC);//@一对一（CPU）
 }
 
 static void ipi_stop(void *unused)
