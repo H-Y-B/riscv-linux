@@ -250,7 +250,7 @@ static int __init plic_init(struct device_node *node,    //@ PLIC init
 
 	pr_info("mapped %d interrupts to %d (out of %d) handlers.\n",    //@ boot log: in plic_init function
 		nr_irqs, nr_mapped, nr_handlers);
-	set_handle_irq(plic_handle_irq);   //@ set external interrupt haldler
+	set_handle_irq(plic_handle_irq);   //@ set external interrupt haldler in kernel/irq/handle.c
 	return 0;
 
 out_iounmap:

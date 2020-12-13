@@ -50,8 +50,8 @@ asmlinkage void __irq_entry do_IRQ(struct pt_regs *regs)  //@ interrupt
 		riscv_software_interrupt();
 		break;
 #endif
-	case INTERRUPT_CAUSE_EXTERNAL:   //@ external interrupt
-		handle_arch_irq(regs);
+	case INTERRUPT_CAUSE_EXTERNAL:   //@ external interrupt 
+		handle_arch_irq(regs);       //@ kernel/irq/handle.c
 		break;
 	default:
 		panic("unexpected interrupt cause");
