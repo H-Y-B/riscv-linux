@@ -1200,14 +1200,20 @@ bool __init early_init_dt_verify(void *params)
 
 void __init early_init_dt_scan_nodes(void)
 {
+	//@ of_scan_flat_dt(..)负责扫描整个设备树，起作用的是回调函数
+
 	/* Retrieve various information from the /chosen node */
-	of_scan_flat_dt(early_init_dt_scan_chosen, boot_command_line);
+	of_scan_flat_dt(early_init_dt_scan_chosen, boot_command_line);//@负责将chosen节点中的bootargs内容拷贝到boot_command_line中
 
 	/* Initialize {size,address}-cells info */
-	of_scan_flat_dt(early_init_dt_scan_root, NULL);
+	of_scan_flat_dt(early_init_dt_scan_root, NULL);              //@根据节点的address-cells和size-cells初始化dt_root_addr_cells和dt_root_size_cells
+								     //@#address-cells表示reg里面address用几个u32来表示
+								     //@#size-cells   表示reg里面size用几个u32来表示
+
 
 	/* Setup memory, calling early_init_dt_add_memory_arch */
-	of_scan_flat_dt(early_init_dt_scan_memory, NULL);
+	of_scan_flat_dt(early_init_dt_scan_memory, NULL);            //@扫描 device_type为memory的节点，一般就是总的memory size为一个memory节点
+								     //@并通过early_init_dt_add_memory_arch将这些节点的信息添加到memory block中
 }
 
 bool __init early_init_dt_scan(void *params)  //@call function : parse_dtb->

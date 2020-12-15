@@ -178,7 +178,7 @@ asmlinkage void __init setup_vm(void)
 
 void __init parse_dtb(unsigned int hartid, void *dtb) //@call function : device tree
 {
-	early_init_dt_scan(__va(dtb));
+	early_init_dt_scan(__va(dtb));//@in drivers/of/fdt.c
 }
 
 static void __init setup_bootmem(void)
@@ -232,9 +232,10 @@ void __init setup_arch(char **cmdline_p)
                register_console(early_console);
        }
 #endif
-	*cmdline_p = boot_command_line;
+	*cmdline_p = boot_command_line;//@编译之前配置的Boot Options
+				       //@或者 bootloader传入的bootargs	
 
-	parse_early_param();
+	parse_early_param();//@解析 saved_command_line
 
 	init_mm.start_code = (unsigned long) _stext;
 	init_mm.end_code   = (unsigned long) _etext;
@@ -250,7 +251,7 @@ void __init setup_arch(char **cmdline_p)
 #endif
 
 #ifdef CONFIG_SMP
-	setup_smp();
+	setup_smp();//@ in arch/riscv/kernel/smpboot.c
 #endif
 
 #ifdef CONFIG_DUMMY_CONSOLE

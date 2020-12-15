@@ -559,6 +559,8 @@ asmlinkage __visible void __init start_kernel(void)//@riscv start kernel
 	page_address_init();
 	pr_notice("%s", linux_banner);              //@boot log: kernel version\computer user\compiler version\compile time
 	setup_arch(&command_line);                  //@in riscv/kernel/setup.c
+						    // 将command_line的指针传入，用来获取内核参数 （boot_command_line）
+
 	/*
 	 * Set up the the initial canary and entropy after arch
 	 * and after adding latent and command line entropy.
