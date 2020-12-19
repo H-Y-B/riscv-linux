@@ -84,13 +84,14 @@ clear_bss_done:
 	add sp, sp, a0           //值：0xffffffe008e02000
 
 	/* Start the kernel */
-	mv a0, s0
-	mv a1, s1
-	call parse_dtb          //@call function : device tree
+	mv a0, s0  //hart ID
+	mv a1, s1  //DTB physical address
+	           //为调用函数parse_dtb作参数准备
+	call parse_dtb          //@call function : device tree in arch/riscv/kernel/setup.c:
  	tail start_kernel
 
 
-
+//###################################################################################################################
 
 relocate:
 	/* Relocate return address */
