@@ -21,7 +21,7 @@
 #include <asm/csr.h>
 
 __INIT
-ENTRY(_start)
+ENTRY(_start)  //0x0000000080200000<->0xffffffe000000000
 	/* Mask all interrupts */
 	csrw sie, zero
 
@@ -76,12 +76,12 @@ clear_bss_done:
 	call relocate
 
 	/* Restore C environment */
-	la tp, init_task
+	la tp, init_task         //值：0xffffffe008e07cc0
 	sw zero, TASK_TI_CPU(tp)
 
-	la sp, init_thread_union
+	la sp, init_thread_union //值：0xffffffe008e00000
 	li a0, ASM_THREAD_SIZE
-	add sp, sp, a0
+	add sp, sp, a0           //值：0xffffffe008e02000
 
 	/* Start the kernel */
 	mv a0, s0
