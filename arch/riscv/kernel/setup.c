@@ -121,7 +121,7 @@ disable:
 #endif /* CONFIG_BLK_DEV_INITRD */
 
 pgd_t swapper_pg_dir[PTRS_PER_PGD] __page_aligned_bss;
-pgd_t trampoline_pg_dir[PTRS_PER_PGD] __initdata __aligned(PAGE_SIZE);
+pgd_t trampoline_pg_dir[PTRS_PER_PGD] __initdata __aligned(PAGE_SIZE);//@一个页大小
 
 #ifndef __PAGETABLE_PMD_FOLDED
 #define NUM_SWAPPER_PMDS ((uintptr_t)-PAGE_OFFSET >> PGDIR_SHIFT)
@@ -140,11 +140,12 @@ asmlinkage void __init setup_vm(void)
 {
 	extern char _start;
 	uintptr_t i;
-	uintptr_t pa = (uintptr_t) &_start;
-	pgprot_t prot = __pgprot(pgprot_val(PAGE_KERNEL) | _PAGE_EXEC);
+	uintptr_t pa = (uintptr_t) &_start;   //0x0000000080200000
+	pgprot_t prot = __pgprot(pgprot_val(PAGE_KERNEL) | _PAGE_EXEC);//@内核 页表项的属性
 
-	va_pa_offset = PAGE_OFFSET - pa;
-	pfn_base = PFN_DOWN(pa);
+	va_pa_offset = PAGE_OFFSET - pa;    //@0xffffffe000000000-0x0000000080200000 = 0xffffffdf7fe00000
+										//@PAGE_OFFSET其实就是物理地址与线性地址之间的位移量。
+	pfn_base = PFN_DOWN(pa);            //@0x0000000000080200
 
 	/* Sanity check alignment and size */
 	BUG_ON((PAGE_OFFSET % PGDIR_SIZE) != 0);
@@ -165,13 +166,13 @@ asmlinkage void __init setup_vm(void)
 	for (i = 0; i < ARRAY_SIZE(swapper_pmd); i++)
 		swapper_pmd[i] = pfn_pmd(PFN_DOWN(pa + i * PMD_SIZE), prot);
 #else
-	trampoline_pg_dir[(PAGE_OFFSET >> PGDIR_SHIFT) % PTRS_PER_PGD] =
+	trampoline_pg_dir[(PAGE_OFFSET >> PGDIR_SHIFT) % PTRS_PER_PGD] =  //@虚拟地址； 赋值 trampoline_pg_dir[]中的一个全局页表项（leaf pte）
 		pfn_pgd(PFN_DOWN(pa), prot);
 
-	for (i = 0; i < (-PAGE_OFFSET)/PGDIR_SIZE; ++i) {
+	for (i = 0; i < (-PAGE_OFFSET)/PGDIR_SIZE; ++i) {//@遍历  从PAGE_OFFSET开始的全局页表项
 		size_t o = (PAGE_OFFSET >> PGDIR_SHIFT) % PTRS_PER_PGD + i;
 		swapper_pg_dir[o] =
-			pfn_pgd(PFN_DOWN(pa + i * PGDIR_SIZE), prot);
+			pfn_pgd(PFN_DOWN(pa + i * PGDIR_SIZE), prot);//@（leaf pte）
 	}
 #endif
 }

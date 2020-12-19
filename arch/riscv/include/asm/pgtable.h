@@ -33,9 +33,9 @@
 #endif /* CONFIG_64BIT */
 
 /* Number of entries in the page global directory */
-#define PTRS_PER_PGD    (PAGE_SIZE / sizeof(pgd_t))
+#define PTRS_PER_PGD    (PAGE_SIZE / sizeof(pgd_t))  //@一个页里面由多少个pgd_t（全局页表项）
 /* Number of entries in the page table */
-#define PTRS_PER_PTE    (PAGE_SIZE / sizeof(pte_t))
+#define PTRS_PER_PTE    (PAGE_SIZE / sizeof(pte_t))  //@一个页里面由多少个pte_t（页表项）
 
 /* Number of PGD entries that a user-mode program can use */
 #define USER_PTRS_PER_PGD   (TASK_SIZE / PGDIR_SIZE)
@@ -124,7 +124,9 @@ static inline void pmd_clear(pmd_t *pmdp)
 
 static inline pgd_t pfn_pgd(unsigned long pfn, pgprot_t prot)
 {
-	return __pgd((pfn << _PAGE_PFN_SHIFT) | pgprot_val(prot));
+	return __pgd((pfn << _PAGE_PFN_SHIFT) | pgprot_val(prot));//@_PAGE_PFN_SHIFT=10
+	//@[63:54] [53:28] [27:19] [18:0]  [9:0]
+	//@    R    PPN_2   PPN_1   PPN_0   prot
 }
 
 #define pgd_index(addr) (((addr) >> PGDIR_SHIFT) & (PTRS_PER_PGD - 1))

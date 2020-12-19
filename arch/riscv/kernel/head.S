@@ -72,7 +72,7 @@ clear_bss_done:
 
 	/* Initialize page tables and relocate to virtual addresses */
 	la sp, init_thread_union + THREAD_SIZE
-	call setup_vm
+	call setup_vm              //in arch/riscv/kernel/setup.c
 	call relocate
 
 	/* Restore C environment */
@@ -97,12 +97,13 @@ relocate:
 	li a1, PAGE_OFFSET
 	la a0, _start
 	sub a1, a1, a0
-	add ra, ra, a1
+	add ra, ra, a1  //保存返回地址
 
 	/* Point stvec to virtual address of intruction after satp write */
 	la a0, 1f
 	add a0, a0, a1
-	csrw stvec, a0
+	csrw stvec, a0  //临时的异常入口
+					//值：0xffffffe0000000c4  PC变成虚拟地址的关键
 
 	/* Compute satp for kernel page tables, but don't load it yet */
 	la a2, swapper_pg_dir
@@ -114,22 +115,28 @@ relocate:
 	 * Load trampoline page directory, which will cause us to trap to
 	 * stvec if VA != PA, or simply fall through if VA == PA
 	 */
-	la a0, trampoline_pg_dir
+	la a0, trampoline_pg_dir//数组地址：0x0000000080220000 实地址
 	srl a0, a0, PAGE_SHIFT  //右移12位 
 	or a0, a0, a1           //MODE-ASID-PPN
 	sfence.vma
-	csrw sptbr, a0 //根页表 地址
-
+	csrw sptbr, a0 //根页表 地址 0x【8】【0000】【00000080220】  
+				   //从这里开始 进入虚拟地址
+				   //该指令执行完后，下条指令发生缺页异常进入 1f （虚拟地址的向量入口地址）
    /*
 	*这里 构建 了两个 根页表地址 from swapper_pg_dir and trampoline_pg_dir
 	*这两个的区别是什么？
+	* swapper_pg_dir 表示内核页表的起始地址，是真正需要的内核页表
+	* trampoline_pg_dir “trampoline”是蹦床的意思，充当临时的页表，因为在进入 1f（以虚拟地址为入口的异常）需要页表
+	*
+	* 为什么把sptbr赋值了两次，第二次赋值还是通过异常来实现的
+	* 答：  异常入口的地址就是虚拟地址了，使得pc从0x00000000802****变成了0xffffffe0000****
 	*/
 
 .align 2
 1:
 	/* Set trap vector to spin forever to help debug */
 	la a0, .Lsecondary_park
-	csrw stvec, a0
+	csrw stvec, a0  //把死循环 作为 异常向量入口
 
 	/* Reload the global pointer */
 .option push
@@ -138,9 +145,11 @@ relocate:
 .option pop
 
 	/* Switch to kernel page tables */
-	csrw sptbr, a2 //根页表 地址;  从这里开始 进入虚拟地址
+	csrw sptbr, a2  //根页表 地址  0x80000000000890d0
 
 	ret
+//end relocate
+
 
 .Lsecondary_start:
 #ifdef CONFIG_SMP

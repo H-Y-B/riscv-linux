@@ -46,7 +46,7 @@
 #define SATP_MODE_32 _AC(0x80000000, UL)
 #define SATP_MODE    SATP_MODE_32
 #else
-#define SATP_PPN     _AC(0x00000FFFFFFFFFFF, UL)
+#define SATP_PPN     _AC(0x00000FFFFFFFFFFF, UL)  //@ [43，0] stap寄存器中ppn的mask
 #define SATP_MODE_39 _AC(0x8000000000000000, UL)
 #define SATP_MODE    SATP_MODE_39
 #endif
