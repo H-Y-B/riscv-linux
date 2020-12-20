@@ -1024,9 +1024,9 @@ u64 __init dt_mem_next_cell(int s, const __be32 **cellp)
 /**
  * early_init_dt_scan_memory - Look for and parse memory nodes
  */
-int __init early_init_dt_scan_memory(unsigned long node, const char *uname,
-				     int depth, void *data)
-{
+int __init early_init_dt_scan_memory(unsigned long node, const char *uname,  //@call function : parse_dtb
+				     int depth, void *data)                                  //@                ->early_init_dt_scan
+{																			 //@                ->early_init_dt_scan_nodes
 	const char *type = of_get_flat_dt_prop(node, "device_type", NULL);
 	const __be32 *reg, *endp;
 	int l;
@@ -1038,7 +1038,7 @@ int __init early_init_dt_scan_memory(unsigned long node, const char *uname,
 
 	reg = of_get_flat_dt_prop(node, "linux,usable-memory", &l);
 	if (reg == NULL)
-		reg = of_get_flat_dt_prop(node, "reg", &l);
+		reg = of_get_flat_dt_prop(node, "reg", &l);              //@ 读取memory节点中reg属性值
 	if (reg == NULL)
 		return 0;
 
@@ -1050,15 +1050,15 @@ int __init early_init_dt_scan_memory(unsigned long node, const char *uname,
 	while ((endp - reg) >= (dt_root_addr_cells + dt_root_size_cells)) {
 		u64 base, size;
 
-		base = dt_mem_next_cell(dt_root_addr_cells, &reg);
-		size = dt_mem_next_cell(dt_root_size_cells, &reg);
+		base = dt_mem_next_cell(dt_root_addr_cells, &reg);  //@ 读出memeory的起始地址
+		size = dt_mem_next_cell(dt_root_size_cells, &reg);  //@ 读出memeory对应的长度
 
 		if (size == 0)
 			continue;
 		pr_debug(" - %llx ,  %llx\n", (unsigned long long)base,
 		    (unsigned long long)size);
 
-		early_init_dt_add_memory_arch(base, size);
+		early_init_dt_add_memory_arch(base, size);          //@ 添加到memblock中管理 in this
 
 		if (!hotpluggable)
 			continue;
@@ -1115,16 +1115,16 @@ int __init early_init_dt_scan_chosen(unsigned long node, const char *uname,
 }
 
 #ifndef MIN_MEMBLOCK_ADDR
-#define MIN_MEMBLOCK_ADDR	__pa(PAGE_OFFSET)
+#define MIN_MEMBLOCK_ADDR	__pa(PAGE_OFFSET)  //@用于将内核的虚拟地址转化成物理地址
 #endif
 #ifndef MAX_MEMBLOCK_ADDR
 #define MAX_MEMBLOCK_ADDR	((phys_addr_t)~0)
 #endif
-
-void __init __weak early_init_dt_add_memory_arch(u64 base, u64 size)
-{
-	const u64 phys_offset = MIN_MEMBLOCK_ADDR;
-
+																	  //@boot 对传入的参数 base 和 size 进行检查
+void __init __weak early_init_dt_add_memory_arch(u64 base, u64 size)  //@call function : parse_dtb
+{																	  //@                ->early_init_dt_scan
+	const u64 phys_offset = MIN_MEMBLOCK_ADDR;						  //@                ->early_init_dt_scan_nodes
+                                                                      //@                ->early_init_dt_scan_memory
 	if (size < PAGE_SIZE - (base & ~PAGE_MASK)) {
 		pr_warn("Ignoring memory block 0x%llx - 0x%llx\n",
 			base, base + size);
@@ -1160,7 +1160,7 @@ void __init __weak early_init_dt_add_memory_arch(u64 base, u64 size)
 		size -= phys_offset - base;
 		base = phys_offset;
 	}
-	memblock_add(base, size);
+	memblock_add(base, size);  //@ in mm/memblock.c
 }
 
 int __init __weak early_init_dt_mark_hotplug_memory_arch(u64 base, u64 size)
@@ -1198,7 +1198,7 @@ bool __init early_init_dt_verify(void *params)
 }
 
 
-void __init early_init_dt_scan_nodes(void)
+void __init early_init_dt_scan_nodes(void)   //@call function : parse_dtb->early_init_dt_scan
 {
 	//@ of_scan_flat_dt(..)负责扫描整个设备树，起作用的是回调函数
 
@@ -1214,6 +1214,7 @@ void __init early_init_dt_scan_nodes(void)
 	/* Setup memory, calling early_init_dt_add_memory_arch */
 	of_scan_flat_dt(early_init_dt_scan_memory, NULL);            //@扫描 device_type为memory的节点，一般就是总的memory size为一个memory节点
 								     //@并通过early_init_dt_add_memory_arch将这些节点的信息添加到memory block中
+									 //@call function in this
 }
 
 bool __init early_init_dt_scan(void *params)  //@call function : parse_dtb->

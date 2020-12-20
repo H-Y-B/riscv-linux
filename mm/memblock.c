@@ -588,12 +588,13 @@ int __init_memblock memblock_add_range(struct memblock_type *type,
 		return 0;
 
 	/* special case for empty array */
-	if (type->regions[0].size == 0) {
+	if (type->regions[0].size == 0) {                //@ boot阶段 还没有memory加入到memblock 管理的数组中，所以type->regions[0].size == 0成立，跑完if 里面的代码后就返回了
 		WARN_ON(type->cnt != 1 || type->total_size);
 		type->regions[0].base = base;
 		type->regions[0].size = size;
 		type->regions[0].flags = flags;
 		memblock_set_region_node(&type->regions[0], nid);
+		//@                     填充好的内存区域的地址      NUMA节点ID
 		type->total_size = size;
 		return 0;
 	}
@@ -606,11 +607,11 @@ repeat:
 	base = obase;
 	nr_new = 0;
 
-	for_each_memblock_type(idx, type, rgn) {
-		phys_addr_t rbase = rgn->base;
-		phys_addr_t rend = rbase + rgn->size;
+	for_each_memblock_type(idx, type, rgn) {   //@遍历memblock.memory 集合中的内存区域，检查新的内存区域重叠
+		phys_addr_t rbase = rgn->base;         //@内存区域的起始地址
+		phys_addr_t rend = rbase + rgn->size;  //@内存区域的结尾地址
 
-		if (rbase >= end)
+		if (rbase >= end)//@集合中内存区域的起始地址大于要加入的内存区域结尾地址，结束循环
 			break;
 		if (rend <= base)
 			continue;
@@ -618,7 +619,7 @@ repeat:
 		 * @rgn overlaps.  If it separates the lower part of new
 		 * area, insert that portion.
 		 */
-		if (rbase > base) {
+		if (rbase > base) {//@集合中内存区域的起始地址大于要加入的内存区域起始地址
 #ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
 			WARN_ON(nid != memblock_get_region_node(rgn));
 #endif
@@ -689,14 +690,14 @@ int __init_memblock memblock_add_node(phys_addr_t base, phys_addr_t size,
  * Return:
  * 0 on success, -errno on failure.
  */
-int __init_memblock memblock_add(phys_addr_t base, phys_addr_t size)
+int __init_memblock memblock_add(phys_addr_t base, phys_addr_t size)//@添加内存区域
 {
 	phys_addr_t end = base + size - 1;
 
 	memblock_dbg("memblock_add: [%pa-%pa] %pF\n",
 		     &base, &end, (void *)_RET_IP_);
 
-	return memblock_add_range(&memblock.memory, base, size, MAX_NUMNODES, 0);
+	return memblock_add_range(&memblock.memory, base, size, MAX_NUMNODES, 0); //@ in this
 }
 
 /**
@@ -820,6 +821,7 @@ int __init_memblock memblock_reserve(phys_addr_t base, phys_addr_t size)
 		     &base, &end, (void *)_RET_IP_);
 
 	return memblock_add_range(&memblock.reserved, base, size, MAX_NUMNODES, 0);
+	//@MAX_NUMNODES：最大 NUMA 节点数
 }
 
 /**

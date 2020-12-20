@@ -54,11 +54,11 @@ enum memblock_flags {
  * @nid: NUMA node id
  */
 struct memblock_region {
-	phys_addr_t base;
-	phys_addr_t size;
-	enum memblock_flags flags;
+	phys_addr_t base;					//@内存区域起始地址，是物理地址
+	phys_addr_t size;					//@内存区域大小，单位是字节 
+	enum memblock_flags flags;			//@该内存区域的标识，例如MEMBLOCK_NOMAP，在做映射的时候不要映射到内核中 
 #ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
-	int nid;
+	int nid;							//@CPU被划分为多个节点(node)，每个node 有对应的内存簇bank，一个标识
 #endif
 };
 
@@ -71,10 +71,10 @@ struct memblock_region {
  * @name: the memory type symbolic name
  */
 struct memblock_type {
-	unsigned long cnt;
-	unsigned long max;
-	phys_addr_t total_size;
-	struct memblock_region *regions;
+	unsigned long cnt;					//@当前管理的集合中记录的内存区域个数
+	unsigned long max;					//@当前管理的集合中可记录的内存区域的最大个数，最大值是INIT_PHYSMEM_REGIONS 
+	phys_addr_t total_size;				//@集合记录的内存总和
+	struct memblock_region *regions;	//@执行内存区域结构（memblock_region）的指针
 	char *name;
 };
 
@@ -87,16 +87,17 @@ struct memblock_type {
  * @physmem: all physical memory
  */
 struct memblock {
-	bool bottom_up;  /* is bottom up direction? */
-	phys_addr_t current_limit;
-	struct memblock_type memory;
-	struct memblock_type reserved;
+	bool bottom_up;  /* is bottom up direction? */  //@表示分配器分配内存的方式 true:从低地址向高地址分配  false:相反就是从高地址向地址分配内存. 
+	phys_addr_t current_limit;				        //@指出了内存块的大小限制 
+	struct memblock_type memory;					//@可分配内存的集合，申请内存时，会从这些集合中分配内存 
+	struct memblock_type reserved;					//@已分配内存的集合，分配出去的内存会放在这个集合里面管理 
 #ifdef CONFIG_HAVE_MEMBLOCK_PHYS_MAP
-	struct memblock_type physmem;
+	struct memblock_type physmem;					//@物理内存的集合
 #endif
 };
 
-extern struct memblock memblock;
+extern struct memblock memblock;  //@在linux kernel初始化完成之后，系统中的内存分配和回收是由伙伴系统来管理，
+                                  //@但是在kernel初始化阶段时，内存的分配和释放是由memblock管理，memblock在系统启动阶段进行简单的内存管理，记录物理内存的使用情况。
 extern int memblock_debug;
 
 #ifdef CONFIG_ARCH_DISCARD_MEMBLOCK
@@ -108,7 +109,7 @@ void memblock_discard(void);
 #define __initdata_memblock
 #endif
 
-#define memblock_dbg(fmt, ...) \
+#define tk(fmt, ...) \
 	if (memblock_debug) printk(KERN_INFO pr_fmt(fmt), ##__VA_ARGS__)
 
 phys_addr_t memblock_find_in_range_node(phys_addr_t size, phys_addr_t align,
