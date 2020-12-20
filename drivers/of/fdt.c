@@ -1144,7 +1144,7 @@ void __init __weak early_init_dt_add_memory_arch(u64 base, u64 size)
 	}
 
 	if (base + size - 1 > MAX_MEMBLOCK_ADDR) {
-		pr_warning("Ignoring memory range 0x%llx - 0x%llx\n",//@boot log
+		pr_warning("Ignoring memory range 0x%llx - 0x%llx\n",//@boot log  : OF: fdt: Ignoring memory range 0x80000000 - 0x80200000
 				((u64)MAX_MEMBLOCK_ADDR) + 1, base + size);
 		size = MAX_MEMBLOCK_ADDR - base + 1;
 	}

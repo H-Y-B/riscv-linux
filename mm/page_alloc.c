@@ -6504,7 +6504,7 @@ void __init free_area_init_node(int nid, unsigned long *zones_size,
 	pgdat->per_cpu_nodestats = NULL;
 #ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
 	get_pfn_range_for_nid(nid, &start_pfn, &end_pfn);
-	pr_info("Initmem setup node %d [mem %#018Lx-%#018Lx]\n", nid,
+	pr_info("Initmem setup node %d [mem %#018Lx-%#018Lx]\n", nid,    //@boot log: Initmem setup node 0 [mem 0x0000000080200000-0x00000000ffffffff]
 		(u64)start_pfn << PAGE_SHIFT,
 		end_pfn ? ((u64)end_pfn << PAGE_SHIFT) - 1 : 0);
 #else
@@ -6968,12 +6968,14 @@ void __init free_area_init_nodes(unsigned long *max_zone_pfn)
 	find_zone_movable_pfns_for_nodes();
 
 	/* Print out the zone ranges */
-	pr_info("Zone ranges:\n");
+	pr_info("Zone ranges:\n");                         //@boot log
 	for (i = 0; i < MAX_NR_ZONES; i++) {
+
 		if (i == ZONE_MOVABLE)
-			continue;
-		pr_info("  %-8s ", zone_names[i]);
-		if (arch_zone_lowest_possible_pfn[i] ==
+			continue;//@由于ZONE_MOVABLE是一个虚拟内存域,不与真正的硬件内存域关联,该内存域的边界总是设置为0
+		
+		pr_info("  %-8s ", zone_names[i]);             //@boot log:    DMA32    [mem 0x0000000080200000-0x00000000ffffffff]
+		if (arch_zone_lowest_possible_pfn[i] ==		   //@boot log:    Normal   [mem 0x0000000100000000-0x00000fffffffffff]
 				arch_zone_highest_possible_pfn[i])
 			pr_cont("empty\n");
 		else
@@ -6985,17 +6987,18 @@ void __init free_area_init_nodes(unsigned long *max_zone_pfn)
 	}
 
 	/* Print out the PFNs ZONE_MOVABLE begins at in each node */
-	pr_info("Movable zone start for each node\n");
+	pr_info("Movable zone start for each node\n");     //@boot log
 	for (i = 0; i < MAX_NUMNODES; i++) {
 		if (zone_movable_pfn[i])
 			pr_info("  Node %d: %#018Lx\n", i,
 			       (u64)zone_movable_pfn[i] << PAGE_SHIFT);
 	}
 
+	//@ 将各个内存域的最大、最小页帧号显示出来
 	/* Print out the early node map */
-	pr_info("Early memory node ranges\n");
+	pr_info("Early memory node ranges\n");             //@boot log
 	for_each_mem_pfn_range(i, MAX_NUMNODES, &start_pfn, &end_pfn, &nid)
-		pr_info("  node %3d: [mem %#018Lx-%#018Lx]\n", nid,
+		pr_info("  node %3d: [mem %#018Lx-%#018Lx]\n", nid,    //@boot log  Initmem setup nodenode   0: [mem 0x0000000080200000-0x00000000ffffffff]
 			(u64)start_pfn << PAGE_SHIFT,
 			((u64)end_pfn << PAGE_SHIFT) - 1);
 
