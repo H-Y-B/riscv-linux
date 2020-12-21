@@ -1144,7 +1144,7 @@ void __init __weak early_init_dt_add_memory_arch(u64 base, u64 size)  //@call fu
 	}
 
 	if (base + size - 1 > MAX_MEMBLOCK_ADDR) {
-		pr_warning("Ignoring memory range 0x%llx - 0x%llx\n",//@boot log  : OF: fdt: Ignoring memory range 0x80000000 - 0x80200000
+		pr_warning("Ignoring memory range 0x%llx - 0x%llx\n",
 				((u64)MAX_MEMBLOCK_ADDR) + 1, base + size);
 		size = MAX_MEMBLOCK_ADDR - base + 1;
 	}
@@ -1154,11 +1154,12 @@ void __init __weak early_init_dt_add_memory_arch(u64 base, u64 size)  //@call fu
 			   base, base + size);
 		return;
 	}
+	//@base=80000000  size=80000000  phys_offset=0x80200000
 	if (base < phys_offset) {
-		pr_warning("Ignoring memory range 0x%llx - 0x%llx\n",//@boot log
+		pr_warning("Ignoring memory range 0x%llx - 0x%llx\n",//@boot log  : OF: fdt: Ignoring memory range 0x80000000 - 0x80200000
 			   base, phys_offset);
-		size -= phys_offset - base;
-		base = phys_offset;
+		size -= phys_offset - base; //@0x7fe00000
+		base = phys_offset;         //@0x80200000
 	}
 	memblock_add(base, size);  //@ in mm/memblock.c
 }
@@ -1214,6 +1215,7 @@ void __init early_init_dt_scan_nodes(void)   //@call function : parse_dtb->early
 	/* Setup memory, calling early_init_dt_add_memory_arch */
 	of_scan_flat_dt(early_init_dt_scan_memory, NULL);            //@扫描 device_type为memory的节点，一般就是总的memory size为一个memory节点
 								     //@并通过early_init_dt_add_memory_arch将这些节点的信息添加到memory block中
+									 //@该函数扫描memory节点，并解析reg属性，注意此时DeviceTree还没有执行unflattern操作，需要使用"fdt"类型接口解析dtb
 									 //@call function in this
 }
 

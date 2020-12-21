@@ -189,35 +189,36 @@ static void __init setup_bootmem(void)
 
 	/* Find the memory region containing the kernel */
 	for_each_memblock(memory, reg) {
-		phys_addr_t vmlinux_end = __pa(_end);
-		phys_addr_t end = reg->base + reg->size;
+		phys_addr_t vmlinux_end = __pa(_end);    //@ 80d0c07c
+		phys_addr_t end = reg->base + reg->size; //@ reg-base:80200000  reg-size:7fe00000
 
 		if (reg->base <= vmlinux_end && vmlinux_end <= end) {
 			/*
 			 * Reserve from the start of the region to the end of
 			 * the kernel
 			 */
-			memblock_reserve(reg->base, vmlinux_end - reg->base);
-			mem_size = min(reg->size, (phys_addr_t)-PAGE_OFFSET);
+			memblock_reserve(reg->base, vmlinux_end - reg->base);//@ 增加了一个逻辑块，但是其增加到memblock.reserved中
+			mem_size = min(reg->size, (phys_addr_t)-PAGE_OFFSET);//@ 0x7fe00000
 		}
 	}
 	BUG_ON(mem_size == 0);
 
 	set_max_mapnr(PFN_DOWN(mem_size));
-	max_low_pfn = memblock_end_of_DRAM();
+	max_low_pfn = memblock_end_of_DRAM();//@0x100000000
 
 #ifdef CONFIG_BLK_DEV_INITRD
 	setup_initrd();
 #endif /* CONFIG_BLK_DEV_INITRD */
 
-	early_init_fdt_reserve_self();
-	early_init_fdt_scan_reserved_mem();
+	early_init_fdt_reserve_self();      //@ 预留设备树自身加载所占内存
+	early_init_fdt_scan_reserved_mem(); //@ 初始化设备树扫描reserved-memory节点预留内存
 	memblock_allow_resize();
 	memblock_dump_all();
 
 	for_each_memblock(memory, reg) {
-		unsigned long start_pfn = memblock_region_memory_base_pfn(reg);
-		unsigned long end_pfn = memblock_region_memory_end_pfn(reg);
+		//@ reg-base:80200000  reg-size:7fe00000
+		unsigned long start_pfn = memblock_region_memory_base_pfn(reg);//@  0x 80200
+		unsigned long end_pfn = memblock_region_memory_end_pfn(reg);   //@  0x100000
 
 		memblock_set_node(PFN_PHYS(start_pfn),
 		                  PFN_PHYS(end_pfn - start_pfn),

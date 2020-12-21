@@ -98,6 +98,15 @@ struct memblock {
 
 extern struct memblock memblock;  //@在linux kernel初始化完成之后，系统中的内存分配和回收是由伙伴系统来管理，
                                   //@但是在kernel初始化阶段时，内存的分配和释放是由memblock管理，memblock在系统启动阶段进行简单的内存管理，记录物理内存的使用情况。
+/*
+@ref link: https://blog.csdn.net/modianwutong/article/details/53162142
+@在进一步介绍memblock之前，有必要先了解下系统内存的使用情况：
+@	首先，内存中的某些部分是永久的分配给内核的，比如内核代码段和数据段，ramdisk和fdt占用的空间等，它们是系统内存的一部分，但是不能被侵占，也不参与内存分配，称之为静态内存；
+@	其次，GPU，Camera等都需要预留大量连续内存，这部分内存平时不用，但是系统必须提前预留好，称之为预留内存；
+@	最后，内存的其余部分称之为动态内存，是需要内核管理的宝贵资源；
+@
+@memblock把物理内存划分为若干内存区，按使用类型分别放在memory和reserved两个集合（数组）中，memory即动态内存的集合，reserved集合包括静态内存和预留内存； */
+
 extern int memblock_debug;
 
 #ifdef CONFIG_ARCH_DISCARD_MEMBLOCK

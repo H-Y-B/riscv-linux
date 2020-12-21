@@ -578,6 +578,9 @@ int __init_memblock memblock_add_range(struct memblock_type *type,
 				phys_addr_t base, phys_addr_t size,
 				int nid, enum memblock_flags flags)
 {
+	//@函数内部会执行两次：
+    //@	 第一次计算需要插入几个内存区，如果超过允许的最大内存区个数，则double内存区数组； 
+	//@  第二次执行内存区的实际插入与合并操作；
 	bool insert = false;
 	phys_addr_t obase = base;
 	phys_addr_t end = base + memblock_cap_size(base, &size);
@@ -587,11 +590,12 @@ int __init_memblock memblock_add_range(struct memblock_type *type,
 	if (!size)
 		return 0;
 
+	//@ 特例: 如果内存集合为空，则不需要执行插入或合并操作，直接插入新的内存区就可以了
 	/* special case for empty array */
 	if (type->regions[0].size == 0) {                //@ boot阶段 还没有memory加入到memblock 管理的数组中，所以type->regions[0].size == 0成立，跑完if 里面的代码后就返回了
 		WARN_ON(type->cnt != 1 || type->total_size);
-		type->regions[0].base = base;
-		type->regions[0].size = size;
+		type->regions[0].base = base;                //@base=0x80200000 
+		type->regions[0].size = size;                //@size=0x7fe00000
 		type->regions[0].flags = flags;
 		memblock_set_region_node(&type->regions[0], nid);
 		//@                     填充好的内存区域的地址      NUMA节点ID
@@ -620,6 +624,7 @@ repeat:
 		 * area, insert that portion.
 		 */
 		if (rbase > base) {//@集合中内存区域的起始地址大于要加入的内存区域起始地址
+		                   //@如果内存区重叠，则先插入低地址部分[base~rbase]，然后重新计算base地址
 #ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
 			WARN_ON(nid != memblock_get_region_node(rgn));
 #endif
@@ -635,7 +640,7 @@ repeat:
 	}
 
 	/* insert the remaining portion */
-	if (base < end) {
+	if (base < end) {//@插入内存区[base~end] 
 		nr_new++;
 		if (insert)
 			memblock_insert_region(type, idx, base, end - base,
@@ -649,6 +654,7 @@ repeat:
 	 * If this was the first round, resize array and repeat for actual
 	 * insertions; otherwise, merge and return.
 	 */
+	//@第一次执行检查是否需要调整内存区数组大小，第二次执行合并操作 
 	if (!insert) {
 		while (type->cnt + nr_new > type->max)
 			if (memblock_double_array(type, obase, size) < 0)
@@ -690,7 +696,7 @@ int __init_memblock memblock_add_node(phys_addr_t base, phys_addr_t size,
  * Return:
  * 0 on success, -errno on failure.
  */
-int __init_memblock memblock_add(phys_addr_t base, phys_addr_t size)//@添加内存区域
+int __init_memblock memblock_add(phys_addr_t base, phys_addr_t size)//@添加内存区域 base=0x80200000 size=0x7fe00000
 {
 	phys_addr_t end = base + size - 1;
 
@@ -1231,6 +1237,8 @@ int __init_memblock memblock_set_node(phys_addr_t base, phys_addr_t size,
 	int i, ret;
 
 	ret = memblock_isolate_range(type, base, size, &start_rgn, &end_rgn);
+	//@先确定移除的逻辑块所在的region，这步就是隔离isolate操作
+	//@把给出的范围内的逻辑块从以所在的块中脱离出来，这样会增加一个新的region。
 	if (ret)
 		return ret;
 
