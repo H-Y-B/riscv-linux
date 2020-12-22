@@ -1213,7 +1213,9 @@ void __init early_init_dt_scan_nodes(void)   //@call function : parse_dtb->early
 
 
 	/* Setup memory, calling early_init_dt_add_memory_arch */
-	of_scan_flat_dt(early_init_dt_scan_memory, NULL);            //@扫描 device_type为memory的节点，一般就是总的memory size为一个memory节点
+	of_scan_flat_dt(early_init_dt_scan_memory, NULL);            
+									 //@探测系统可用内存
+									 //@扫描 device_type为memory的节点，一般就是总的memory size为一个memory节点
 								     //@并通过early_init_dt_add_memory_arch将这些节点的信息添加到memory block中
 									 //@该函数扫描memory节点，并解析reg属性，注意此时DeviceTree还没有执行unflattern操作，需要使用"fdt"类型接口解析dtb
 									 //@call function in this
