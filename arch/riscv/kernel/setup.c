@@ -245,8 +245,7 @@ void __init setup_arch(char **cmdline_p)
 	init_mm.brk        = (unsigned long) _end;   //初始化 堆的起始地址
 
 	setup_bootmem();
-	paging_init();
-	unflatten_device_tree();
+	paging_init();            //@in arch/riscv/mm/init.c
 
 #ifdef CONFIG_SWIOTLB
 	swiotlb_init(1);

@@ -6150,7 +6150,7 @@ static inline unsigned long __meminit zone_absent_pages_in_node(int nid,
 
 #endif /* CONFIG_HAVE_MEMBLOCK_NODE_MAP */
 
-static void __meminit calculate_node_totalpages(struct pglist_data *pgdat,
+static void __meminit calculate_node_totalpages(struct pglist_data *pgdat,//@计算 pgdat这个node中各个管理区包含的实际页面数，和内存空间漏洞的页面数
 						unsigned long node_start_pfn,
 						unsigned long node_end_pfn,
 						unsigned long *zones_size,
@@ -6164,13 +6164,13 @@ static void __meminit calculate_node_totalpages(struct pglist_data *pgdat,
 		unsigned long zone_start_pfn, zone_end_pfn;
 		unsigned long size, real_size;
 
-		size = zone_spanned_pages_in_node(pgdat->node_id, i,
-						  node_start_pfn,
+		size = zone_spanned_pages_in_node(pgdat->node_id, i,   //@该函数返回节点一个管理区的跨度所包含的页面数，包含内存空间的漏洞
+						  node_start_pfn,                      //@要取得这个节点管理区所包含的实际页面数，需要减去这个管理区内存空间的漏洞所包含的页面数
 						  node_end_pfn,
 						  &zone_start_pfn,
 						  &zone_end_pfn,
 						  zones_size);
-		real_size = size - zone_absent_pages_in_node(pgdat->node_id, i,
+		real_size = size - zone_absent_pages_in_node(pgdat->node_id, i,//@该函数返回 节点一个管理区所包含的内存空间漏洞页面数
 						  node_start_pfn, node_end_pfn,
 						  zholes_size);
 		if (size)
@@ -6184,8 +6184,8 @@ static void __meminit calculate_node_totalpages(struct pglist_data *pgdat,
 		realtotalpages += real_size;
 	}
 
-	pgdat->node_spanned_pages = totalpages;
-	pgdat->node_present_pages = realtotalpages;
+	pgdat->node_spanned_pages = totalpages;    //@节点个管理区的跨度所包含的页面数
+	pgdat->node_present_pages = realtotalpages;//@管理区所包含的实际页面个数
 	printk(KERN_DEBUG "On node %d totalpages: %lu\n", pgdat->node_id,
 							realtotalpages);
 }
@@ -6401,6 +6401,7 @@ static void __init free_area_init_core(struct pglist_data *pgdat)
 					zone_names[0], dma_reserve);
 		}
 
+		//@ 计算nr_kernel_pages和nr_all_pages的数量
 		if (!is_highmem_idx(j))
 			nr_kernel_pages += freesize;
 		/* Charge for highmem memmap if there are enough kernel pages */
@@ -6492,13 +6493,14 @@ void __init free_area_init_node(int nid, unsigned long *zones_size,
 				   unsigned long node_start_pfn,
 				   unsigned long *zholes_size)
 {
-	pg_data_t *pgdat = NODE_DATA(nid);
+	pg_data_t *pgdat = NODE_DATA(nid);  //@ 拿到这个 Node
 	unsigned long start_pfn = 0;
 	unsigned long end_pfn = 0;
 
 	/* pg_data_t should be reset to zero when it's allocated */
 	WARN_ON(pgdat->nr_zones || pgdat->kswapd_classzone_idx);
 
+	//@ 初始化内存节点pgdat
 	pgdat->node_id = nid;
 	pgdat->node_start_pfn = node_start_pfn;
 	pgdat->per_cpu_nodestats = NULL;
@@ -6510,10 +6512,10 @@ void __init free_area_init_node(int nid, unsigned long *zones_size,
 #else
 	start_pfn = node_start_pfn;
 #endif
-	calculate_node_totalpages(pgdat, start_pfn, end_pfn,
+	calculate_node_totalpages(pgdat, start_pfn, end_pfn,  //@计算页帧数: spanned_pages, present_pages
 				  zones_size, zholes_size);
 
-	alloc_node_mem_map(pgdat);
+	alloc_node_mem_map(pgdat);          //@为全局的mem_map[]数组分配空间
 	pgdat_set_deferred_range(pgdat);
 
 	free_area_init_core(pgdat);
@@ -6939,26 +6941,26 @@ static void check_for_memory(pg_data_t *pgdat, int nid)
  * starts where the previous one ended. For example, ZONE_DMA32 starts
  * at arch_max_dma_pfn.
  */
-void __init free_area_init_nodes(unsigned long *max_zone_pfn)
+void __init free_area_init_nodes(unsigned long *max_zone_pfn)//@  初始化各个节点的所有pg_data_t和zone、page的数据
 {
 	unsigned long start_pfn, end_pfn;
 	int i, nid;
 
 	/* Record where the zone boundaries are */
-	memset(arch_zone_lowest_possible_pfn, 0,
+	memset(arch_zone_lowest_possible_pfn, 0,            //@ 全局数组arch_zone_lowest_possible_pfn,用来存储各个内存域可使用的最低内存页帧编号
 				sizeof(arch_zone_lowest_possible_pfn));
-	memset(arch_zone_highest_possible_pfn, 0,
+	memset(arch_zone_highest_possible_pfn, 0,           //@ 全局数组arch_zone_highest_possible_pfn,用来存储各个内存域可使用的最高内存页帧编号
 				sizeof(arch_zone_highest_possible_pfn));
 
-	start_pfn = find_min_pfn_with_active_regions();
+	start_pfn = find_min_pfn_with_active_regions();//@找到注册的最低内存域中可用的编号最小的页帧
 
 	for (i = 0; i < MAX_NR_ZONES; i++) {
 		if (i == ZONE_MOVABLE)
 			continue;
 
 		end_pfn = max(max_zone_pfn[i], start_pfn);
-		arch_zone_lowest_possible_pfn[i] = start_pfn;
-		arch_zone_highest_possible_pfn[i] = end_pfn;
+		arch_zone_lowest_possible_pfn[i] = start_pfn;  //@ 0x 80200   0x100000
+		arch_zone_highest_possible_pfn[i] = end_pfn;   //@ 0x100000   0x100000000（error, is 0x100000）
 
 		start_pfn = end_pfn;
 	}
@@ -6975,7 +6977,7 @@ void __init free_area_init_nodes(unsigned long *max_zone_pfn)
 			continue;//@由于ZONE_MOVABLE是一个虚拟内存域,不与真正的硬件内存域关联,该内存域的边界总是设置为0
 		
 		pr_info("  %-8s ", zone_names[i]);             //@boot log:    DMA32    [mem 0x0000000080200000-0x00000000ffffffff]
-		if (arch_zone_lowest_possible_pfn[i] ==		   //@boot log:    Normal   [mem 0x0000000100000000-0x00000fffffffffff]
+		if (arch_zone_lowest_possible_pfn[i] ==		   //@boot log:    Normal   [mem 0x0000000100000000-0x00000fffffffffff] bug : empty
 				arch_zone_highest_possible_pfn[i])
 			pr_cont("empty\n");
 		else
@@ -6998,7 +7000,7 @@ void __init free_area_init_nodes(unsigned long *max_zone_pfn)
 	/* Print out the early node map */
 	pr_info("Early memory node ranges\n");             //@boot log
 	for_each_mem_pfn_range(i, MAX_NUMNODES, &start_pfn, &end_pfn, &nid)
-		pr_info("  node %3d: [mem %#018Lx-%#018Lx]\n", nid,    //@boot log  Initmem setup nodenode   0: [mem 0x0000000080200000-0x00000000ffffffff]
+		pr_info("  node %3d: [mem %#018Lx-%#018Lx]\n", nid,    //@boot log    node   0: [mem 0x0000000080200000-0x00000000ffffffff]
 			(u64)start_pfn << PAGE_SHIFT,
 			((u64)end_pfn << PAGE_SHIFT) - 1);
 
@@ -7006,15 +7008,16 @@ void __init free_area_init_nodes(unsigned long *max_zone_pfn)
 	mminit_verify_pageflags_layout();
 	setup_nr_node_ids();
 	zero_resv_unavail();
-	for_each_online_node(nid) {
+	
+	for_each_online_node(nid) {//@遍历各个内存结点，分别调用free_area_init_node创建相关数据结构
 		pg_data_t *pgdat = NODE_DATA(nid);
-		free_area_init_node(nid, NULL,
+		free_area_init_node(nid, NULL,                //@call function in this
 				find_min_pfn_for_node(nid), NULL);
 
 		/* Any memory on that node */
 		if (pgdat->node_present_pages)
-			node_set_state(nid, N_MEMORY);
-		check_for_memory(pgdat, nid);
+			node_set_state(nid, N_MEMORY);//@ 判断该结点是否有内存，如果有，就将结点位图的标志设置为 N_HIGH_MEMORY
+		check_for_memory(pgdat, nid);//@ 进一步检查地域ZONE_HIGHMEM的内存域中是否有内存，并据此在结点位图中相应地设置为N_NORMAL_MEMORY标志
 	}
 }
 

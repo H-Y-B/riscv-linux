@@ -28,11 +28,12 @@ static void __init zone_sizes_init(void)
 	unsigned long max_zone_pfns[MAX_NR_ZONES] = { 0, };
 
 #ifdef CONFIG_ZONE_DMA32
-	max_zone_pfns[ZONE_DMA32] = PFN_DOWN(min(4UL * SZ_1G, max_low_pfn));
+	max_zone_pfns[ZONE_DMA32] = PFN_DOWN(min(4UL * SZ_1G, max_low_pfn));//@[0]=0x100000
 #endif
-	max_zone_pfns[ZONE_NORMAL] = max_low_pfn;
+	max_zone_pfns[ZONE_NORMAL] = max_low_pfn;                           //@[1]=0x100000000  bug : max_low_pfn should be pfn_size not byte_size.
+	//@该数组是UMA系统内存结点的各个内存域的最大PFN.
 
-	free_area_init_nodes(max_zone_pfns);
+	free_area_init_nodes(max_zone_pfns);  //@ in mm/page_alloc.c
 }
 
 void setup_zero_page(void)
@@ -43,7 +44,7 @@ void setup_zero_page(void)
 void __init paging_init(void)
 {
 	setup_zero_page();
-	local_flush_tlb_all();
+	local_flush_tlb_all(); //@ __asm__ __volatile__ ("sfence.vma" : : : "memory");
 	zone_sizes_init();
 }
 

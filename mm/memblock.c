@@ -91,19 +91,21 @@ unsigned long min_low_pfn;
 unsigned long max_pfn;
 unsigned long long max_possible_pfn;
 
+//@ __initdata_memblock 用来指定变量或函数所在的section
+//@memblock中三种 内存区域的 初始化值 
 static struct memblock_region memblock_memory_init_regions[INIT_MEMBLOCK_REGIONS] __initdata_memblock;
 static struct memblock_region memblock_reserved_init_regions[INIT_MEMBLOCK_REGIONS] __initdata_memblock;
 #ifdef CONFIG_HAVE_MEMBLOCK_PHYS_MAP
 static struct memblock_region memblock_physmem_init_regions[INIT_PHYSMEM_REGIONS] __initdata_memblock;
 #endif
-
+//@memblock的初始化
 struct memblock memblock __initdata_memblock = {
-	.memory.regions		= memblock_memory_init_regions,
+	.memory.regions		= memblock_memory_init_regions,  //@128个内存区域的数组
 	.memory.cnt		= 1,	/* empty dummy entry */
 	.memory.max		= INIT_MEMBLOCK_REGIONS,
 	.memory.name		= "memory",
 
-	.reserved.regions	= memblock_reserved_init_regions,
+	.reserved.regions	= memblock_reserved_init_regions,//@128个内存区域的数组
 	.reserved.cnt		= 1,	/* empty dummy entry */
 	.reserved.max		= INIT_MEMBLOCK_REGIONS,
 	.reserved.name		= "reserved",
@@ -1239,6 +1241,7 @@ int __init_memblock memblock_set_node(phys_addr_t base, phys_addr_t size,
 	ret = memblock_isolate_range(type, base, size, &start_rgn, &end_rgn);
 	//@先确定移除的逻辑块所在的region，这步就是隔离isolate操作
 	//@把给出的范围内的逻辑块从以所在的块中脱离出来，这样会增加一个新的region。
+	//@start_rgn=0 end_rgn=1
 	if (ret)
 		return ret;
 

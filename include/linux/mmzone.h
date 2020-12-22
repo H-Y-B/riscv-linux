@@ -378,7 +378,7 @@ struct zone {
 	long lowmem_reserve[MAX_NR_ZONES];
 
 #ifdef CONFIG_NUMA
-	int node;
+	int node;              //@ 该zone所属的node的node id
 #endif
 	struct pglist_data	*zone_pgdat;
 	struct per_cpu_pageset __percpu *pageset;
@@ -624,9 +624,9 @@ extern struct page *mem_map;
  */
 struct bootmem_data;
 typedef struct pglist_data {
-	struct zone node_zones[MAX_NR_ZONES];
+	struct zone node_zones[MAX_NR_ZONES];                //@ 该node包含的zone
 	struct zonelist node_zonelists[MAX_ZONELISTS];
-	int nr_zones;
+	int nr_zones;                                        //@ 该node中zone的个数
 #ifdef CONFIG_FLAT_NODE_MEM_MAP	/* means !SPARSEMEM */
 	struct page *node_mem_map;
 #ifdef CONFIG_PAGE_EXTENSION
@@ -647,11 +647,11 @@ typedef struct pglist_data {
 	 */
 	spinlock_t node_size_lock;
 #endif
-	unsigned long node_start_pfn;
-	unsigned long node_present_pages; /* total number of physical pages */
+	unsigned long node_start_pfn;      //@ 该node的开始页帧号
+	unsigned long node_present_pages; /* total number of physical pages */ //@ 该node中物理page的个数 total number of physical pages
 	unsigned long node_spanned_pages; /* total size of physical page
 					     range, including holes */
-	int node_id;
+	int node_id;                       //@ 该node的id
 	wait_queue_head_t kswapd_wait;
 	wait_queue_head_t pfmemalloc_wait;
 	struct task_struct *kswapd;	/* Protected by
@@ -907,8 +907,13 @@ extern int numa_zonelist_order_handler(struct ctl_table *, int,
 extern char numa_zonelist_order[];
 #define NUMA_ZONELIST_ORDER_LEN	16
 
+
+
+
+
 #ifndef CONFIG_NEED_MULTIPLE_NODES
 
+//@对于PC这样的UMA系统，使用struct pglist_data contig_page_data ，作为系统唯一的node管理所有的内存区域。（UMA系统中中只有一个node）
 extern struct pglist_data contig_page_data;
 #define NODE_DATA(nid)		(&contig_page_data)
 #define NODE_MEM_MAP(nid)	mem_map
@@ -918,6 +923,10 @@ extern struct pglist_data contig_page_data;
 #include <asm/mmzone.h>
 
 #endif /* !CONFIG_NEED_MULTIPLE_NODES */
+
+
+
+
 
 extern struct pglist_data *first_online_pgdat(void);
 extern struct pglist_data *next_online_pgdat(struct pglist_data *pgdat);
