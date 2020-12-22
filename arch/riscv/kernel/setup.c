@@ -203,8 +203,8 @@ static void __init setup_bootmem(void)
 	}
 	BUG_ON(mem_size == 0);
 
-	set_max_mapnr(PFN_DOWN(mem_size));
-	max_low_pfn = memblock_end_of_DRAM();//@0x100000000
+	set_max_mapnr(PFN_DOWN(mem_size));   //@实际内存中可以容纳的 页 个数
+	max_low_pfn = memblock_end_of_DRAM();//@0x100000000 [0x80200000~0x100000000]  bug:max_low_pfn should be pfn_size not byte_size.
 
 #ifdef CONFIG_BLK_DEV_INITRD
 	setup_initrd();
@@ -220,9 +220,11 @@ static void __init setup_bootmem(void)
 		unsigned long start_pfn = memblock_region_memory_base_pfn(reg);//@  0x 80200
 		unsigned long end_pfn = memblock_region_memory_end_pfn(reg);   //@  0x100000
 
-		memblock_set_node(PFN_PHYS(start_pfn),
-		                  PFN_PHYS(end_pfn - start_pfn),
-		                  &memblock.memory, 0);
+		//@将某一类型的memblock区域 设置 所属的 nodeID
+		memblock_set_node(PFN_PHYS(start_pfn),                //@80200000
+		                  PFN_PHYS(end_pfn - start_pfn),      //@7fe00000
+		                  &memblock.memory, 
+						  0);
 	}
 }
 
