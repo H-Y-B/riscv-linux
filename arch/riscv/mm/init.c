@@ -39,6 +39,9 @@ static void __init zone_sizes_init(void)
 void setup_zero_page(void)
 {
 	memset((void *)empty_zero_page, 0, PAGE_SIZE);
+	//@为了适应COW（Copy On Write）机制，内核中定义了一个empty_zero_page，即全部为0的一个页面，
+	//@当我们读取一个共享的页面时，读出的全部为0，就是读出的empty_zero_page中的内容，
+	//@只有在写的时候才会COW。
 }
 
 void __init paging_init(void)

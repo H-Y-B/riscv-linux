@@ -1502,8 +1502,12 @@ void * __init memblock_alloc_try_nid_nopanic(
 		     __func__, (u64)size, (u64)align, nid, &min_addr,
 		     &max_addr, (void *)_RET_IP_);
 
-	ptr = memblock_alloc_internal(size, align,
-					   min_addr, max_addr, nid);
+	ptr = memblock_alloc_internal(size,    //@size of memory block to be allocated in bytes
+								  align,   //@alignment of the region and block’s size
+					              min_addr,//@the lower bound of the memory region to allocate (phys address)
+								  max_addr,//@the upper bound of the memory region to allocate (phys address)
+								  nid);    //@nid of the free area to find, NUMA_NO_NODE for any node
+								  //@ret Virtual address of allocated memory block on success, NULL on failure.
 	if (ptr)
 		memset(ptr, 0, size);
 	return ptr;

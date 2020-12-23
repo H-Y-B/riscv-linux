@@ -67,6 +67,9 @@ struct hmm;
 #define _struct_page_alignment
 #endif
 
+//@因为内核会为每一个物理页帧创建一个struct page的结构体，因此要保证page结构体足够的小，否则仅struct page就要占用大量的内存。
+//@出于节省内存的考虑，struct page中使用了大量的联合体union。
+//@page结构与物理页相关，而并非与虚拟页相关。
 struct page {
 	unsigned long flags;		/* Atomic flags, some possibly
 					 * updated asynchronously */
@@ -205,6 +208,7 @@ struct page {
 	int _last_cpupid;
 #endif
 } _struct_page_alignment;
+//@end struct page
 
 /*
  * Used for sizing the vmemmap region on some architectures
