@@ -250,7 +250,7 @@ void __init setup_arch(char **cmdline_p)
 	paging_init();            //@in arch/riscv/mm/init.c
 
 #ifdef CONFIG_SWIOTLB
-	swiotlb_init(1);
+	swiotlb_init(1);  //@in kernel/dma/swiotlb.c
 #endif
 
 #ifdef CONFIG_SMP

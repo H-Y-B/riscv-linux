@@ -163,7 +163,7 @@ void swiotlb_print_info(void)
 		return;
 	}
 
-	pr_info("mapped [mem %#010llx-%#010llx] (%luMB)\n",
+	pr_info("mapped [mem %#010llx-%#010llx] (%luMB)\n",  //@ boot log
 	       (unsigned long long)io_tlb_start,
 	       (unsigned long long)io_tlb_end,
 	       bytes >> 20);
