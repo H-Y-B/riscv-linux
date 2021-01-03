@@ -55,6 +55,41 @@
 #define     CONTEXT_THRESHOLD		0x00
 #define     CONTEXT_CLAIM		0x04
 
+/*@
+ref link: https://github.com/riscv/riscv-plic-spec/blob/master/riscv-plic.adoc
+----------------------------------------------------------
+base + 0x000000 : Reserved  (interrupr source 0 does not exist)
+base + 0x000004 : Interrupt source 1 priority
+......
+base + 0x000FFC : Interrupt source 1023 priority
+----------------------------------------------------------
+base + 0x001000 : Interrupt Pending bit 0-31
+......
+base + 0x001000 : Interrupt Pending bit 992-1023
+
+
+
+
+----------------------------------------------------------
+中断使能 (每一个处理器核，都有自己对于1024个中断的使能)
+base + 0x002000 : Enable bits for source 0-31 on context  0
+......
+base + 0x00207F : Enable bits for source 992-1023 on context  0
+...... on context 1
+----------------------------------------------------------
+base + 0x1FFFFC : R
+base + 0x200000 : Priority threhold for context 0
+base + 0x200004 : Claim/complete for context 0 中断ID号
+----------------------------------------------------------
+base + 0x2FFFFC : R
+base + 0x201000 : Priority threhold for context 1
+base + 0x201004 : Claim/complete for context 1
+---------------------------------------------------------
+*/
+
+
+
+
 static void __iomem *plic_regs;
 
 struct plic_handler {
@@ -66,6 +101,7 @@ static DEFINE_PER_CPU(struct plic_handler, plic_handlers);
 static inline void __iomem *plic_hart_offset(int ctxid)
 {
 	return plic_regs + CONTEXT_BASE + ctxid * CONTEXT_PER_HART;
+        //@                 0x200000                    0x1000
 }
 
 static inline u32 __iomem *plic_enable_base(int ctxid)
@@ -79,24 +115,26 @@ static inline u32 __iomem *plic_enable_base(int ctxid)
  */
 static DEFINE_RAW_SPINLOCK(plic_toggle_lock);
 
-static inline void plic_toggle(int ctxid, int hwirq, int enable)
+static inline void plic_toggle(int ctxid, int hwirq, int enable)//开关 ctxid中的 hwirq中断 
 {
 	u32 __iomem *reg = plic_enable_base(ctxid) + (hwirq / 32);
 	u32 hwirq_mask = 1 << (hwirq % 32);
 
-	raw_spin_lock(&plic_toggle_lock);
+	raw_spin_lock(&plic_toggle_lock);  //@加锁
 	if (enable)
 		writel(readl(reg) | hwirq_mask, reg);
 	else
 		writel(readl(reg) & ~hwirq_mask, reg);
-	raw_spin_unlock(&plic_toggle_lock);
+	raw_spin_unlock(&plic_toggle_lock);//@解锁
 }
 
 static inline void plic_irq_toggle(struct irq_data *d, int enable)
 {
 	int cpu;
 
-	writel(enable, plic_regs + PRIORITY_BASE + d->hwirq * PRIORITY_PER_ID);
+	writel(enable, plic_regs + PRIORITY_BASE + d->hwirq * PRIORITY_PER_ID); //设置中断优先级
+	//@                               0x0                        0x4
+
 	for_each_cpu(cpu, irq_data_get_affinity_mask(d)) {
 		struct plic_handler *handler = per_cpu_ptr(&plic_handlers, cpu);
 
@@ -124,6 +162,8 @@ static struct irq_chip plic_chip = {
 	.irq_enable	= plic_irq_enable,
 	.irq_disable	= plic_irq_disable,
 };
+//@以上 创建了irq_chip结构体，对应一个中断控制器###################################################
+
 
 static int plic_irqdomain_map(struct irq_domain *d, unsigned int irq,
 			      irq_hw_number_t hwirq)
@@ -147,26 +187,30 @@ static struct irq_domain *plic_irqdomain;
  * that source ID back to the same claim register.  This automatically enables
  * and disables the interrupt, so there's nothing else to do.
  */
-static void plic_handle_irq(struct pt_regs *regs)                //@ PLIC 
+static void plic_handle_irq(struct pt_regs *regs)      //@ PLIC 处理外部中断 
 {
-	struct plic_handler *handler = this_cpu_ptr(&plic_handlers);
-	void __iomem *claim = plic_hart_offset(handler->ctxid) + CONTEXT_CLAIM;
+	struct plic_handler *handler = this_cpu_ptr(&plic_handlers);//@获取本hart的  per-cpu变量
+
+
+	void __iomem *claim = plic_hart_offset(handler->ctxid) + CONTEXT_CLAIM;//@ 本hart的 claim寄存器 地址
+
 	irq_hw_number_t hwirq;             //@ type:unsigned long
 
 	WARN_ON_ONCE(!handler->present);
 
-	csr_clear(sie, SIE_SEIE);
-	while ((hwirq = readl(claim))) {          //@ read claim 
+	csr_clear(sie, SIE_SEIE); //@ 关闭S-外部中断
+	while ((hwirq = readl(claim))) {     //@ read claim, id为0表示没有外部中断 
 		int irq = irq_find_mapping(plic_irqdomain, hwirq);  //@ interrupt number
 
+		//@处理中断
 		if (unlikely(irq <= 0))
-			pr_warn_ratelimited("can't find mapping for hwirq %lu\n",
-					hwirq);
+			pr_warn_ratelimited("can't find mapping for hwirq %lu\n",hwirq);
 		else
 			generic_handle_irq(irq);
-		writel(hwirq, claim);                //@ write claim
+		
+                writel(hwirq, claim);                //@ write claim
 	}
-	csr_set(sie, SIE_SEIE);
+	csr_set(sie, SIE_SEIE);  //@ 开启S-外部中断
 }
 
 /*
@@ -199,23 +243,24 @@ static int __init plic_init(struct device_node *node,    //@ PLIC init
 		return -EIO;
 
 	error = -EINVAL;
-	of_property_read_u32(node, "riscv,ndev", &nr_irqs);
+	of_property_read_u32(node, "riscv,ndev", &nr_irqs);//@ 问题：nr_irq的值是多少？ 有多少个外部中断
 	if (WARN_ON(!nr_irqs))
 		goto out_iounmap;
 
-	nr_handlers = of_irq_count(node);
+	nr_handlers = of_irq_count(node);//@问题：nr_handlers的值是多少？有多少核心，每个核心有两个11和9
 	if (WARN_ON(!nr_handlers))
 		goto out_iounmap;
 	if (WARN_ON(nr_handlers < num_possible_cpus()))
 		goto out_iounmap;
 
 	error = -ENOMEM;
+	//@ 创建irq_domain
 	plic_irqdomain = irq_domain_add_linear(node, nr_irqs + 1,
 			&plic_irqdomain_ops, NULL);
 	if (WARN_ON(!plic_irqdomain))
 		goto out_iounmap;
 
-	for (i = 0; i < nr_handlers; i++) {
+	for (i = 0; i < nr_handlers; i++) {//@遍历
 		struct of_phandle_args parent;
 		struct plic_handler *handler;
 		irq_hw_number_t hwirq;
@@ -239,7 +284,7 @@ static int __init plic_init(struct device_node *node,    //@ PLIC init
 		cpu = riscv_hartid_to_cpuid(hartid);
 		handler = per_cpu_ptr(&plic_handlers, cpu);
 		handler->present = true;
-		handler->ctxid = i;
+		handler->ctxid = i;//与PLIC寄存器绑定
 
 		/* priority must be > threshold to trigger an interrupt */
 		writel(0, plic_hart_offset(i) + CONTEXT_THRESHOLD);
