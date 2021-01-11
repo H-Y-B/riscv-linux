@@ -57,7 +57,7 @@ struct irq_desc {
 	struct irq_common_data	irq_common_data;
 	struct irq_data		irq_data;
 	unsigned int __percpu	*kstat_irqs;
-	irq_flow_handler_t	handle_irq;
+	irq_flow_handler_t	handle_irq;  //@ 中断处理程序
 #ifdef CONFIG_IRQ_PREFLOW_FASTEOI
 	irq_preflow_handler_t	preflow_handler;
 #endif
@@ -150,7 +150,7 @@ static inline void *irq_desc_get_handler_data(struct irq_desc *desc)
  * Architectures call this to let the generic IRQ layer
  * handle an interrupt.
  */
-static inline void generic_handle_irq_desc(struct irq_desc *desc)
+static inline void generic_handle_irq_desc(struct irq_desc *desc)//@中断处理流程
 {
 	desc->handle_irq(desc);
 }

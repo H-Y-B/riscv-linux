@@ -24,8 +24,8 @@ irqchip_of_match_end __used __section(__irqchip_of_table_end);
 
 extern struct of_device_id __irqchip_of_table[];
 
-void __init irqchip_init(void)                  //@ call function from init_IRQ in riscv/kernel/irq.c
+void __init irqchip_init(void)                  //@ start_kernel -> init_IRQ -> ; call function from init_IRQ in riscv/kernel/irq.c
 {
-	of_irq_init(__irqchip_of_table);
+	of_irq_init(__irqchip_of_table);  //查找    由IRQCHIP_DECLARE宏添加的   中断控制器
 	acpi_probe_device_table(irqchip);
 }

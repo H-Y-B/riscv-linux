@@ -284,7 +284,7 @@ static int __init plic_init(struct device_node *node,    //@ PLIC init
 		cpu = riscv_hartid_to_cpuid(hartid);
 		handler = per_cpu_ptr(&plic_handlers, cpu);
 		handler->present = true;
-		handler->ctxid = i;//与PLIC寄存器绑定
+		handler->ctxid = i;//与PLIC寄存器绑定  0-s 0-m  1-s 1-m
 
 		/* priority must be > threshold to trigger an interrupt */
 		writel(0, plic_hart_offset(i) + CONTEXT_THRESHOLD);

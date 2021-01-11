@@ -61,7 +61,7 @@ asmlinkage void __irq_entry do_IRQ(struct pt_regs *regs)  //@ interrupt
 	set_irq_regs(old_regs);
 }
 
-void __init init_IRQ(void)
+void __init init_IRQ(void)//@ start kernel -> 
 {
 	irqchip_init();
 }

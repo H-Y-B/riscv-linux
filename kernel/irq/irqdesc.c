@@ -617,7 +617,7 @@ void irq_init_desc(unsigned int irq)
  * @irq:	The irq number to handle
  *
  */
-int generic_handle_irq(unsigned int irq)
+int generic_handle_irq(unsigned int irq)  //@中断处理流程
 {
 	struct irq_desc *desc = irq_to_desc(irq);   //@ get irq_desc
 
