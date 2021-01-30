@@ -69,19 +69,21 @@ base + 0x001000 : Interrupt Pending bit 992-1023
 
 
 
+上下文  指的是  核0-s 核1-s......
 
 ----------------------------------------------------------
-中断使能 (每一个处理器核，都有自己对于1024个中断的使能)
+中断使能 (每一个上下文，都有自己对于1024个中断的使能)
 base + 0x002000 : Enable bits for source 0-31 on context  0
 ......
 base + 0x00207F : Enable bits for source 992-1023 on context  0
 ...... on context 1
 ----------------------------------------------------------
+(每一个上下文，都有自己的 优先级阈值、完成ID)
 base + 0x1FFFFC : R
 base + 0x200000 : Priority threhold for context 0
 base + 0x200004 : Claim/complete for context 0 中断ID号
 ----------------------------------------------------------
-base + 0x2FFFFC : R
+base + 0x200FFC : R
 base + 0x201000 : Priority threhold for context 1
 base + 0x201004 : Claim/complete for context 1
 ---------------------------------------------------------
@@ -238,7 +240,7 @@ static int __init plic_init(struct device_node *node,    //@ PLIC init
 		return -ENXIO;
 	}
 
-	plic_regs = of_iomap(node, 0);
+	plic_regs = of_iomap(node, 0);//@PLIC基地址
 	if (WARN_ON(!plic_regs))
 		return -EIO;
 
@@ -254,13 +256,22 @@ static int __init plic_init(struct device_node *node,    //@ PLIC init
 		goto out_iounmap;
 
 	error = -ENOMEM;
-	//@ 创建irq_domain
-	plic_irqdomain = irq_domain_add_linear(node, nr_irqs + 1,
-			&plic_irqdomain_ops, NULL);
+	//@ 创建irq_domain（抽象的中断控制器）
+	plic_irqdomain = irq_domain_add_linear(node, 
+										   nr_irqs + 1,         //该中断控制器支持的irq的个数
+										   &plic_irqdomain_ops, 
+										   NULL);
 	if (WARN_ON(!plic_irqdomain))
 		goto out_iounmap;
 
-	for (i = 0; i < nr_handlers; i++) {//@遍历
+	for (i = 0; i < nr_handlers; i++) {//@遍历  上下文； 双核，4次
+		/*
+			在设备数中的 中断控制器节点 中的    interrupts-extend=<cpu0  0xffff_ffff  M-外部中断
+															  cpu0  0x9          S-外部中断
+															  cpu1  0xffff_ffff  M-外部中断
+															  cpu1  0x9>         S-外部中断
+		
+		*/
 		struct of_phandle_args parent;
 		struct plic_handler *handler;
 		irq_hw_number_t hwirq;
@@ -272,7 +283,7 @@ static int __init plic_init(struct device_node *node,    //@ PLIC init
 		}
 
 		/* skip context holes */
-		if (parent.args[0] == -1)
+		if (parent.args[0] == -1)  //@  如果是 M-外部中断 忽略；  如果是 S-外部中断 继续
 			continue;
 
 		hartid = plic_find_hart_id(parent.np);
@@ -284,10 +295,10 @@ static int __init plic_init(struct device_node *node,    //@ PLIC init
 		cpu = riscv_hartid_to_cpuid(hartid);
 		handler = per_cpu_ptr(&plic_handlers, cpu);
 		handler->present = true;
-		handler->ctxid = i;//与PLIC寄存器绑定  0-s 0-m  1-s 1-m
+		handler->ctxid = i;//与PLIC寄存器绑定  0-[cpu0-s]  1-[cpu1-s]
 
 		/* priority must be > threshold to trigger an interrupt */
-		writel(0, plic_hart_offset(i) + CONTEXT_THRESHOLD);
+		writel(0, plic_hart_offset(i) + CONTEXT_THRESHOLD);//@  把 上下文的优先级阈值  都设置为 0， 这样只要 优先级大于0，就可以响应
 		for (hwirq = 1; hwirq <= nr_irqs; hwirq++)
 			plic_toggle(i, hwirq, 0);
 		nr_mapped++;
